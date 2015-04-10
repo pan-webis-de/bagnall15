@@ -7,15 +7,8 @@ import random
 import itertools
 import re
 import json
+from language import load_texts, always
 
-TRAINING_FN_PATTERN = r'^known\d+\.txt$'
-TEST_FN_PATTERN = r'^unknown\.txt$'
-
-training_fn_search = re.compile(TRAINING_FN_PATTERN).search
-test_fn_search = re.compile(TRAINING_FN_PATTERN).search
-
-def always(x):
-    return True
 
 def get_alphabet(texts):
     text = ''.join(''.join(x) for x in texts)
@@ -33,22 +26,6 @@ def encode_and_cycle_texts(alphabet, texts):
     return {k: itertools.cycle(alphabet.encode_text(x) for x in v)
             for k, v in texts.items()}
 
-
-def load_texts(srcdir, class_accept=always, file_accept=training_fn_search):
-    texts = {}
-    for subdir in os.listdir(srcdir):
-        if not class_accept(subdir):
-            continue
-        full_subdir = os.path.join(srcdir, subdir)
-        if not os.path.isdir(full_subdir):
-            continue
-        for fn in os.listdir(full_subdir):
-            if file_accept(fn):
-                ffn = os.path.join(full_subdir, fn)
-                f = open(ffn)
-                texts.setdefault(subdir, []).append(f.read())
-                f.close()
-    return texts
 
 def train(srcdir, accept_fn, leakage, batch_size, 
           sub_epochs, leakage_decay, learn_rate_decay,

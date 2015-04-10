@@ -1,0 +1,32 @@
+#!/usr/bin/python
+import argparse
+import os
+import sys
+import charmodel
+import random
+import itertools
+import re
+import json
+import language
+
+
+def count_chars(text):
+    for c, n in language.count_chars(text):
+        print "%3s: %d" % (c.encode('utf8'), n)
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('corpus', help="the corpus to look at")
+    parser.add_argument('-x', '--exclude_test', action='store_true',
+                        help="exclude test documents")
+    parser.add_argument('-c', '--count-chars', action='store_true',
+                        help="count the characters")
+
+    args = parser.parse_args()
+
+    text = language.concat_corpus(args.corpus, args.exclude_test)
+
+    if args.count_chars:
+        count_chars(text)
+
+main()
