@@ -52,6 +52,7 @@ def load_texts(srcdir, class_accept=always, file_accept=training_fn_search):
 
 def train(srcdir, accept_fn, leakage, batch_size, 
           sub_epochs, leakage_decay, learn_rate_decay,
+          ignore_start,
           **kwargs):
 
     raw_texts = load_texts(srcdir, accept_fn)
@@ -79,7 +80,8 @@ def train(srcdir, accept_fn, leakage, batch_size,
                "leakage %s" % (i, net.learn_rate, leakage))
 
         for name, cycle in texts.items():
-            net.train(cycle.next(), name, leakage=leakage)
+            net.train(cycle.next(), name, leakage=leakage,
+                      ignore_start=ignore_start)
 
         net.save()
         leakage *= leakage_decay
@@ -140,6 +142,8 @@ def main():
                               "ReTANH, 5: clipped ReLU"))
     parser.add_argument('-d', '--bptt-depth', type=int, default=50,
                         help="how far to backpropagate through time")
+    parser.add_argument('-i', '--ignore-start', type=int, default=0,
+                        help="don't train on this many characters at start")
 
     args = parser.parse_args()
 
@@ -165,6 +169,7 @@ def main():
           periodic_pgm_dump=args.periodic_pgm_dump,
           periodic_pgm_period=args.periodic_pgm_period,
           basename=args.basename, activation=args.activation,
-          learning_method=args.learning_method)
+          learning_method=args.learning_method,
+          ignore_start=args.ignore_start)
 
 main()
