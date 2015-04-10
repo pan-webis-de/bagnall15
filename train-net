@@ -1,0 +1,170 @@
+#!/usr/bin/python
+import argparse
+import os
+import sys
+import charmodel
+import random
+import itertools
+import re
+import json
+
+TRAINING_FN_PATTERN = r'^known\d+\.txt$'
+TEST_FN_PATTERN = r'^unknown\.txt$'
+
+training_fn_search = re.compile(TRAINING_FN_PATTERN).search
+test_fn_search = re.compile(TRAINING_FN_PATTERN).search
+
+def always(x):
+    return True
+
+def get_alphabet(texts):
+    text = ''.join(''.join(x) for x in texts)
+    a = charmodel.Alphabet(text, ignore_case=False, threshold=3e-6)
+    print >>sys.stderr, a.alphabet
+    print >>sys.stderr, a.collapsed_chars
+    return a
+
+
+def get_net(alphabet, classnames, **kwargs):
+    return charmodel.Net(alphabet, classnames, **kwargs)
+
+
+def encode_and_cycle_texts(alphabet, texts):
+    return {k: itertools.cycle(alphabet.encode_text(x) for x in v)
+            for k, v in texts.items()}
+
+
+def load_texts(srcdir, class_accept=always, file_accept=training_fn_search):
+    texts = {}
+    for subdir in os.listdir(srcdir):
+        if not class_accept(subdir):
+            continue
+        full_subdir = os.path.join(srcdir, subdir)
+        if not os.path.isdir(full_subdir):
+            continue
+        for fn in os.listdir(full_subdir):
+            if file_accept(fn):
+                ffn = os.path.join(full_subdir, fn)
+                f = open(ffn)
+                texts.setdefault(subdir, []).append(f.read())
+                f.close()
+    return texts
+
+def train(srcdir, accept_fn, leakage, batch_size, 
+          sub_epochs, leakage_decay, learn_rate_decay,
+          **kwargs):
+
+    raw_texts = load_texts(srcdir, accept_fn)
+    alphabet = get_alphabet(raw_texts.values())
+    textnames = sorted(raw_texts.keys())
+
+    metadata = json.dumps({
+        'alphabet': alphabet.alphabet,
+        'collapse_chars': alphabet.collapsed_chars,
+        'version': 1,
+        'classnames': textnames,
+        'case_insensitive': False,
+        'utf8': True,
+        'collapse_space': False,
+    }, sort_keys=True)
+
+    net = get_net(alphabet, textnames, metadata=metadata, **kwargs)
+
+    net.batch_size = batch_size
+
+    texts = encode_and_cycle_texts(alphabet, raw_texts)
+
+    for i in range(sub_epochs):
+        print ("doing sub-epoch %d with learn-rate %s, "
+               "leakage %s" % (i, net.learn_rate, leakage))
+
+        for name, cycle in texts.items():
+            net.train(cycle.next(), name, leakage=leakage)
+
+        net.save()
+        leakage *= leakage_decay
+        net.learn_rate *= learn_rate_decay
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('srcdir', help="find training text here")
+    parser.add_argument('destdir', help="write results here")
+    parser.add_argument('-n', '--basename',
+                        help="base filenames upon this")
+    parser.add_argument('-H', '--hidden-size', type=int, default=199, metavar='<nodes>',
+                        help="number of hidden nodes")
+    parser.add_argument('-r', '--rng-seed', type=int, default=-1,
+                        help="rng seed (-1 for auto)")
+    parser.add_argument('-e', '--sub-epochs', type=int, default=1,
+                        help="how many cycles through the texts to do")
+    parser.add_argument('--batch-size', type=int, default=20, metavar='<int>',
+                        help="mini-batch size")
+    parser.add_argument('--presynaptic-noise', type=float, default=0, metavar='<float>',
+                        help="Add this much presynaptic noise")
+    parser.add_argument('-l', '--learn-rate', type=float, default=1e-3,
+                        help=charmodel.Net.learn_rate.__doc__)
+    parser.add_argument('-L', '--leakage', type=float, default=-1,
+                        help=("how much training leaks into other classes "
+                              "[0-1] or negative"))
+    parser.add_argument('--leakage-decay', type=float, default=1,
+                        help="change in leakage per sub-epoch")
+    parser.add_argument('--learn-rate-decay', type=float, default=1,
+                        help="change in learn-rate per sub-epoch")
+    parser.add_argument('-m', '--momentum', type=float, default=0.95, metavar='<0-1>',
+                        help=charmodel.Net.momentum.__doc__)
+    parser.add_argument('--momentum-weight', type=float, default=0.5, metavar='<0-1>',
+                        help=charmodel.Net.momentum_weight.__doc__)
+    parser.add_argument('--log-file', default=None,
+                        help="log to this file")
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help="print more to stderr")
+    parser.add_argument('--enable-fp-exceptions', action='store_true',
+                        help="crash on bad floating point errors")
+    parser.add_argument('--temporal-pgm-dump', action='store_true',
+                        help=("save images showing changing state "
+                              "of input/error vectors"))
+    parser.add_argument('--periodic-pgm-dump',
+                        metavar='"({ih,ho,bi}{w,m,d,t})*"',
+                        help=("Periodically dump images of weights;"
+                              "string determines which"))
+    parser.add_argument('--periodic-pgm-period', type=int, default=10000,
+                        help=("periodicity of periodic-pgm-dump"))
+    parser.add_argument('--accept_re', metavar='REGEXP',
+                        help="only use classes matching this pattern")
+    parser.add_argument('--learning-method', type=int, default=4,
+                        help=("0: weighted, 2: simplified N., "
+                              "3: classical, 4: adagrad"))
+    parser.add_argument('--activation', type=int, default=2,
+                        help=("1: ReLU, 2: ReSQRT, 3: ReLOG, 4: "
+                              "ReTANH, 5: clipped ReLU"))
+    parser.add_argument('-d', '--bptt-depth', type=int, default=50,
+                        help="how far to backpropagate through time")
+
+    args = parser.parse_args()
+
+    if args.enable_fp_exceptions:
+        charmodel.enable_fp_exceptions()
+
+    if args.rng_seed != -1:
+        random.seed(args.rng_seed)
+
+    if args.accept_re:
+        accept_fn = re.compile(args.accept_re).search
+    else:
+        accept_fn = always
+
+    train(args.srcdir, accept_fn, args.leakage, 
+          args.batch_size, args.sub_epochs, 
+          args.leakage_decay, args.learn_rate_decay,
+          bptt_depth=args.bptt_depth,
+          hidden_size=args.hidden_size,
+          rng_seed=args.rng_seed, log_file=args.log_file,
+          verbose=args.verbose, learn_rate=args.learn_rate,
+          temporal_pgm_dump=args.temporal_pgm_dump,
+          periodic_pgm_dump=args.periodic_pgm_dump,
+          periodic_pgm_period=args.periodic_pgm_period,
+          basename=args.basename, activation=args.activation,
+          learning_method=args.learning_method)
+
+main()
