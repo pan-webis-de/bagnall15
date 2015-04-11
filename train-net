@@ -122,6 +122,8 @@ def main():
                         help="don't train on this many characters at start")
     parser.add_argument('-M', '--language-mapping',
                         help="use this character mapping")
+    parser.add_argument('-f', '--filename',
+                        help="save net here")
 
     args = parser.parse_args()
 
@@ -155,6 +157,6 @@ def main():
           basename=args.basename, activation=args.activation,
           learning_method=args.learning_method,
           ignore_start=args.ignore_start,
-          charmap=charmap)
+          charmap=charmap, filename=args.filename)
 
 main()
