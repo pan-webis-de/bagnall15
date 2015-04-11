@@ -1,5 +1,6 @@
-# OPTIONS: threshold 1e-05, dotellipses collapse_digits decompose_caps decompose
-decomposed = {
+# -*- coding: utf-8 -*-
+# OPTIONS: threshold 1e-05, dotellipses collapse_dashes collapse_digits decompose_caps decompose
+charmap = {
     u' ': u' ',                 # kept Zs (106932)
     u'e': u'e',
     u'n': u'n',
@@ -84,7 +85,7 @@ decomposed = {
     u'\u0300': u'\u0300',       # "̀" -> "̀"  kept Mn (58) COMBINING GRAVE ACCENT
     u'[': u'[',                 # kept Ps (34)
     u']': u']',                 # kept Pe (34)
-    u'\u2013': u'\u2013',       # "–" -> "–"  kept Pd (33) EN DASH
+    u'\u2013': u'\u2014',       # "–" -> "—"  unified dash EN DASH
     u'Q': u'q\xb9',             # decomposed caps 
     u'\u2028': '',              # " " -> ""  dispensible LINE SEPARATOR
     u'\u0302': u'\u0302',       # "̂" -> "̂"  kept Mn (7) COMBINING CIRCUMFLEX ACCENT

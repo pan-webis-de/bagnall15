@@ -49,6 +49,7 @@ def print_char_map(text, threshold=1e-5, decompose=False,
                    ignore_case=False, collapse_latin=False,
                    decompose_caps=False, collapse_dashes=True):
 
+    print '# -*- coding: utf-8 -*-'
     print '# OPTIONS: threshold %s, %s' % (threshold,
                                            ' '.join(k for k, v in vars().items()
                                                     if v == True))
@@ -86,7 +87,7 @@ def print_char_map(text, threshold=1e-5, decompose=False,
                         u'\u2013\u2014')
 
     remapped_chars = set()
-    print '%s = {' % ("decomposed" if decompose else "composed")
+    print 'charmap = {'
     for c, n in counts:
         m, note = specials.get(c, (c, ''))
         category = unicodedata.category(c)

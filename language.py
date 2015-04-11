@@ -15,8 +15,15 @@ test_fn_search = re.compile(TRAINING_FN_PATTERN).search
 def always(x):
     return True
 
+#XXX assumes NFKD norm
+def remap_text(text, charmap):
+    text = text.decode('utf8')
+    text = unicodedata.normalize('NFKD', text)
+    return ''.join(charmap(x) for x in text).encode('utf8')
 
-def load_texts(srcdir, class_accept=always, file_accept=training_fn_search):
+
+def load_texts(srcdir, class_accept=always, file_accept=training_fn_search,
+               charmap=None):
     texts = {}
     for subdir in os.listdir(srcdir):
         if not class_accept(subdir):
@@ -28,7 +35,10 @@ def load_texts(srcdir, class_accept=always, file_accept=training_fn_search):
             if file_accept(fn):
                 ffn = os.path.join(full_subdir, fn)
                 f = open(ffn)
-                texts.setdefault(subdir, []).append(f.read())
+                text = f.read()
+                if charmap:
+                    text = remap_text(text, charmap)
+                texts.setdefault(subdir, []).append(text)
                 f.close()
     return texts
 
@@ -51,8 +61,6 @@ def count_chars(text, decompose=False):
     c = Counter(text)
     return c.most_common()
 
-def fix_en_chars():
-    pass
 
 dispensible_chars = set('\x0b\x0c\r'.decode('utf8') + u'\ufeff\xad\x85' +
                         u'\u2028')

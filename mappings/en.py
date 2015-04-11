@@ -1,5 +1,6 @@
-# OPTIONS: threshold 1e-05, dotellipses collapse_digits decompose_caps decompose
-decomposed = {
+# -*- coding: utf-8 -*-
+# OPTIONS: threshold 1e-05, dotellipses collapse_dashes collapse_digits decompose_caps decompose
+charmap = {
     u' ': u' ',                 # kept Zs (92447)
     u'e': u'e',
     u't': u't',

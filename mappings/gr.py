@@ -1,5 +1,6 @@
-# OPTIONS: threshold 1e-05, dotellipses collapse_latin collapse_digits decompose_caps decompose
-decomposed = {
+# -*- coding: utf-8 -*-
+# OPTIONS: threshold 1e-05, dotellipses collapse_dashes collapse_latin collapse_digits decompose_caps decompose
+charmap = {
     u' ': u' ',                 # kept Zs (262771)
     u'\u03b1': u'\u03b1',       # "α" -> "α"   GREEK SMALL LETTER ALPHA
     u'\u0301': u'\u0301',       # "́" -> "́"  kept Mn (159677) COMBINING ACUTE ACCENT

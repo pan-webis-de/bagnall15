@@ -8,7 +8,7 @@ import itertools
 import re
 import json
 from language import load_texts, always
-
+import mappings
 
 def get_alphabet(texts):
     text = ''.join(''.join(x) for x in texts)
@@ -29,10 +29,9 @@ def encode_and_cycle_texts(alphabet, texts):
 
 def train(srcdir, accept_fn, leakage, batch_size, 
           sub_epochs, leakage_decay, learn_rate_decay,
-          ignore_start,
+          ignore_start, charmap,
           **kwargs):
-
-    raw_texts = load_texts(srcdir, accept_fn)
+    raw_texts = load_texts(srcdir, accept_fn, charmap=charmap)
     alphabet = get_alphabet(raw_texts.values())
     textnames = sorted(raw_texts.keys())
 
@@ -121,6 +120,8 @@ def main():
                         help="how far to backpropagate through time")
     parser.add_argument('-i', '--ignore-start', type=int, default=0,
                         help="don't train on this many characters at start")
+    parser.add_argument('-M', '--language-mapping',
+                        help="use this character mapping")
 
     args = parser.parse_args()
 
@@ -135,6 +136,12 @@ def main():
     else:
         accept_fn = always
 
+    if args.language_mapping:
+        mod = getattr(mappings, args.language_mapping)
+        charmap = mod.charmap.get
+    else:
+        charmap = None
+
     train(args.srcdir, accept_fn, args.leakage, 
           args.batch_size, args.sub_epochs, 
           args.leakage_decay, args.learn_rate_decay,
@@ -147,6 +154,7 @@ def main():
           periodic_pgm_period=args.periodic_pgm_period,
           basename=args.basename, activation=args.activation,
           learning_method=args.learning_method,
-          ignore_start=args.ignore_start)
+          ignore_start=args.ignore_start,
+          charmap=charmap)
 
 main()
