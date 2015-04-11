@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 import argparse
 import os
 import sys
@@ -8,25 +9,171 @@ import itertools
 import re
 import json
 import language
+import unicodedata
+from collections import Counter
+
+def count_words(text, ignore_case=False):
+    text = text.decode('utf8')
+    if ignore_case:
+        text = text.lower()
+    text = re.sub(r"(?<=\w)'(?=\w)", r"³".decode('utf8'),
+                  text, flags=re.U)
+    words = re.split(r"[^\w³-]+".decode('utf8'), text, flags=re.U)
+    c = Counter(words)
+    for w, n in c.most_common(1000):
+        w = w.replace('³'.decode('utf8'), "'")
+        print "%6d %s" % (n, w)
 
 
-def count_chars(text):
-    for c, n in language.count_chars(text):
-        print "%3s: %d" % (c.encode('utf8'), n)
+def count_chars(text, decompose=False, category=None):
+    counts = language.count_chars(text, decompose)
+    if category is not None:
+        counts = [(c, n) for c, n in counts
+                  if re.match(category, unicodedata.category(c))]
+    total = float(sum(x[1] for x in counts))
+    for c, n in counts:
+        print "%7d %.6f %4s %5x %5s" % (n, n / total, unicodedata.category(c),
+                                        ord(c), c.encode('utf8'))
+    print "%d unique characters, %d total" % (len(counts), total)
+
+
+def list_chars(text, decompose=False, category=None):
+    chars = (c for c, n in language.count_chars(text, decompose))
+    if category is not None:
+        chars = (x for x in chars if re.match(category, unicodedata.category(c)))
+    print ''.join(chars)
+
+
+def print_char_map(text, threshold=1e-5, decompose=False,
+                   collapse_digits=True, dotellipses=True,
+                   ignore_case=False, collapse_latin=False,
+                   decompose_caps=False):
+
+    print '# OPTIONS: threshold %s, %s' % (threshold,
+                                           ' '.join(k for k, v in vars().items()
+                                                    if v == True))
+    charmap = {}
+    counts = language.count_chars(text, decompose)
+    total = sum(x[1] for x in counts)
+
+    if isinstance(threshold, float):
+        threshold = int(total * threshold)
+
+    specials = {c: ('', 'dispensible')
+                for c in language.dispensible_chars}
+
+    specials.update((c, ("'", 'single quote'))
+                    for c in language.single_quotes)
+    specials.update((c, ('"', 'double quote'))
+                    for c in language.double_quotes)
+
+    specials[u'\t'] = ('  ', 'tab')
+
+    if dotellipses:
+        specials["…".decode('utf8')] = ('...', 'ellipses')
+
+    if collapse_digits:
+        specials.update((x, ('7', 'digit')) for x in u'0123456789')
+
+    if collapse_latin:
+        specials.update((x, ('S', 'latin')) for x in
+                        u'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        specials.update((x, ('s', 'latin')) for x in
+                        u'abcdefghijklmnopqrstuvwxyz')
+
+    remapped_chars = set()
+    print '%s = {' % ("decomposed" if decompose else "composed")
+    for c, n in counts:
+        m, note = specials.get(c, (c, ''))
+        category = unicodedata.category(c)
+        if category[0] != 'L':
+            if c not in specials:
+                if n < threshold:
+                    m = ''
+                    note = 'removed %s, %d < %d' % (category, n, threshold)
+                else:
+                    note = 'kept %s (%d)' % (category, n)
+        elif n < threshold: # a letter, keep for now
+            note = 'kept letter under threshold %d < %d' % (n, threshold)
+
+        if ignore_case:
+            m = m.lower()
+            note = "ignore case %s" % note
+        elif decompose_caps and category == 'Lu':
+            m = m.lower() + u'\u00B9'
+            note = "decomposed caps %s" % note
+
+        if ord(c) > 127 or (len(m) == 1 and ord(m) > 127):
+            s = '"%s" -> "%s" ' % (c.encode('utf-8'), m.encode('utf-8'))
+            note = "%-12s %s %s" % (s, note, unicodedata.name(c, '<unknown>'))
+
+        if note:
+            s = "    %r: %r," % (c, m)
+            print "%-30s  # %s" % (s, note)
+        else:
+            print "    %r: %r," % (c, m)
+        remapped_chars.update(m)
+
+    print "}"
+    print "# mapping %d characters to %d, (%s)" % (len(counts),
+                                                   len(remapped_chars),
+                                                   ("decomposed" if decompose
+                                                    else "composed"))
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('corpus', help="the corpus to look at")
+
     parser.add_argument('-x', '--exclude_test', action='store_true',
                         help="exclude test documents")
+
     parser.add_argument('-c', '--count-chars', action='store_true',
                         help="count the characters")
+
+    parser.add_argument('--count-words', action='store_true',
+                        help="count the words")
+
+    parser.add_argument('-m', '--print-char-map', action='store_true',
+                        help="print dictionary remapping the characters")
+
+    parser.add_argument('-l', '--list-chars', action='store_true',
+                        help="print a string of the characters")
+
+    parser.add_argument('-d', '--decompose-unicode', action='store_true',
+                        help="decompose characters")
+
+    parser.add_argument('-C', '--unicode-category',
+                        help="only list/count characters whose category match this RE")
+
+    parser.add_argument('-i', '--ignore-case', action='store_true',
+                        help="be case-insensitive")
+
+    parser.add_argument('--decompose-caps', action='store_true',
+                        help="treat caps as composed characters")
+
+    parser.add_argument('--collapse-latin', action='store_true',
+                        help="Treat all latin characters the same")
 
     args = parser.parse_args()
 
     text = language.concat_corpus(args.corpus, args.exclude_test)
 
     if args.count_chars:
-        count_chars(text)
+        count_chars(text, decompose=args.decompose_unicode,
+                    category=args.unicode_category)
+
+    if args.list_chars:
+        list_chars(text, decompose=args.decompose_unicode,
+                   category=args.unicode_category)
+
+    if args.print_char_map:
+        print_char_map(text, decompose=args.decompose_unicode,
+                       ignore_case=args.ignore_case,
+                       collapse_latin=args.collapse_latin,
+                       decompose_caps=args.decompose_caps)
+
+    if args.count_words:
+        count_words(text, ignore_case=args.ignore_case)
 
 main()
