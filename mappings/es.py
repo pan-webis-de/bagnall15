@@ -1,4 +1,4 @@
-# OPTIONS: threshold 1e-05, dotellipses collapse_digits decompose_caps decompose
+# OPTIONS: threshold 1e-05, dotellipses collapse_dashes collapse_digits decompose_caps decompose
 decomposed = {
     u' ': u' ',                 # kept Zs (471317)
     u'e': u'e',
@@ -55,13 +55,13 @@ decomposed = {
     u'O': u'o\xb9',             # decomposed caps 
     u'U': u'u\xb9',             # decomposed caps 
     u'F': u'f\xb9',             # decomposed caps 
-    u'\u2013': u'\u2013',       # "–" -> "–"  kept Pd (981) EN DASH
+    u'\u2013': u'\u2014',       # "–" -> "—"  unified dash EN DASH
     u'\xbf': u'\xbf',           # "¿" -> "¿"  kept Po (924) INVERTED QUESTION MARK
     u'?': u'?',                 # kept Po (924)
     u'B': u'b\xb9',             # decomposed caps 
     u'(': u'(',                 # kept Ps (872)
     u')': u')',                 # kept Pe (872)
-    u'\u2014': u'\u2014',       # "—" -> "—"  kept Pd (812) EM DASH
+    u'\u2014': u'\u2014',       # "—" -> "—"  unified dash EM DASH
     u';': u';',                 # kept Po (743)
     u'Q': u'q\xb9',             # decomposed caps 
     u'J': u'j\xb9',             # decomposed caps 
@@ -98,4 +98,4 @@ decomposed = {
     u"'": "'",                  # single quote
     u'*': '',                   # removed Po, 2 < 29
 }
-# mapping 97 characters to 53, (decomposed)
+# mapping 97 characters to 52, (decomposed)

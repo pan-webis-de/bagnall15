@@ -47,7 +47,7 @@ def list_chars(text, decompose=False, category=None):
 def print_char_map(text, threshold=1e-5, decompose=False,
                    collapse_digits=True, dotellipses=True,
                    ignore_case=False, collapse_latin=False,
-                   decompose_caps=False):
+                   decompose_caps=False, collapse_dashes=True):
 
     print '# OPTIONS: threshold %s, %s' % (threshold,
                                            ' '.join(k for k, v in vars().items()
@@ -80,6 +80,10 @@ def print_char_map(text, threshold=1e-5, decompose=False,
                         u'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
         specials.update((x, ('s', 'latin')) for x in
                         u'abcdefghijklmnopqrstuvwxyz')
+
+    if collapse_dashes:
+        specials.update((x, (u'\u2014', 'unified dash')) for x in
+                        u'\u2013\u2014')
 
     remapped_chars = set()
     print '%s = {' % ("decomposed" if decompose else "composed")
