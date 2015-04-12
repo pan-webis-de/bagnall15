@@ -14,11 +14,10 @@ def get_charmap(lang):
         return nullmapper
 
     charmap = globals()[lang].charmap
-    m = charmap.__getitem__
 
     def mapper(text):
         text = text.decode('utf8')
         text = unicodedata.normalize('NFKD', text)
-        return ''.join(m(x) for x in text).encode('utf8')
+        return u''.join(charmap.get(x, u'') for x in text).encode('utf8')
 
     return mapper
