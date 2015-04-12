@@ -50,6 +50,7 @@ def train(srcdir, remap, accept_fn, leakage, batch_size,
     net.batch_size = batch_size
 
     texts = encode_and_cycle_texts(alphabet, raw_texts)
+    validation_texts = [(k, texts[k].next()) for k in textnames[:5]]
 
     for i in range(sub_epochs):
         print ("doing sub-epoch %d with learn-rate %s, "
@@ -58,6 +59,13 @@ def train(srcdir, remap, accept_fn, leakage, batch_size,
         for name, cycle in texts.items():
             net.train(cycle.next(), name, leakage=leakage,
                       ignore_start=ignore_start)
+
+        for j, x in enumerate(validation_texts):
+            name, text = x
+            entropies = net.test(text, ignore_start)
+            own_e, ave_e = (entropies[j], sum(entropies) / len(entropies))
+            print ("%s own %.3f ave %.3f diff %.3f" %
+                   (name, own_e, ave_e, ave_e - own_e))
 
         net.save()
         leakage *= leakage_decay
