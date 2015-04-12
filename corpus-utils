@@ -48,7 +48,8 @@ def list_chars(text, decompose=False, category=None):
 def print_char_map(text, threshold=1e-5, decompose=False,
                    collapse_digits=True, dotellipses=True,
                    ignore_case=False, collapse_latin=False,
-                   decompose_caps=False, collapse_dashes=True):
+                   decompose_caps=False, collapse_dashes=True,
+                   collapse_brackets=True):
 
     print '# -*- coding: utf-8 -*-'
     print '# OPTIONS: threshold %s, %s' % (threshold,
@@ -86,6 +87,10 @@ def print_char_map(text, threshold=1e-5, decompose=False,
     if collapse_dashes:
         specials.update((x, (u'\u2014', 'unified dash')) for x in
                         u'\u2013\u2014')
+
+    if collapse_brackets:
+        specials.update((x, (u'(', 'brackets')) for x in u'[{')
+        specials.update((x, (u')', 'brackets')) for x in u']}')
 
     remapped_chars = set()
     print 'charmap = {'

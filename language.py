@@ -55,7 +55,7 @@ def count_chars(text, decompose=False):
 
 
 dispensible_chars = set('\x0b\x0c\r'.decode('utf8') + u'\ufeff\xad\x85' +
-                        u'\u2028')
+                        u'\u2028\\_+')
 
 single_quotes = set("'‘’‘‘".decode('utf8') + u'\u2018')
 
