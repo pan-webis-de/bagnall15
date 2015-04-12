@@ -22,6 +22,9 @@ pgm-clean:
 	rm -rf images
 	mkdir images
 
+pyc-clean:
+	rm -f *.pyc mappings/*.pyc
+
 .PHONY: all pgm-clean
 
 .SECONDARY: recur recur/local.mak
