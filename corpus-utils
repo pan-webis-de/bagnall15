@@ -13,17 +13,52 @@ import unicodedata
 from collections import Counter
 import mappings
 
-def count_words(text, ignore_case=False):
-    text = text.decode('utf8')
+
+def unify_case(text):
+    #trickier than .lower() because of the decomposed case marker
+    text = text.lower()
+    return text.replace("¹".decode('utf8'), "")
+
+
+def split_words(text, ignore_case=False):
+    if not isinstance(text, unicode):
+        text = text.decode('utf8')
     if ignore_case:
-        text = text.lower()
+        text = unify_case(text)
     text = re.sub(r"(?<=\w)'(?=\w)", r"³".decode('utf8'),
                   text, flags=re.U)
     words = re.split(r"[^\w³-]+".decode('utf8'), text, flags=re.U)
-    c = Counter(words)
-    for w, n in c.most_common(1000):
-        w = w.replace('³'.decode('utf8'), "'")
-        print "%6d %s" % (n, w)
+    words = sum((w.split('--') for w in words), [])
+    words = [x.strip('-_') for x in words]
+    return [x for x in words if x]
+
+
+def decode_split_word(w):
+    return w.replace('³'.decode('utf8'), "'")
+
+
+def print_word_counts(c):
+    prev_n = None
+    for w, n in c.most_common():
+        if n != prev_n:
+            print "\n------------- %s --------------" % n
+            prev_n = n
+        w = decode_split_word(w)
+        print w,
+    print
+    print len(c)
+
+def count_words_doc_freq(texts, ignore_case=False):
+    bags = [split_words(x, ignore_case=ignore_case) for x in texts]
+    c = Counter()
+    for b in bags:
+        c.update(set(b))
+    print_word_counts(c)
+
+def count_words(text, ignore_case=False):
+    words = split_words(text, ignore_case=ignore_case)
+    c = Counter(x for x in words if x)
+    print_word_counts(c)
 
 
 def count_chars(text, decompose=False, category=None):
@@ -145,6 +180,9 @@ def main():
     parser.add_argument('--count-words', action='store_true',
                         help="count the words")
 
+    parser.add_argument('--count-words-doc-freq', action='store_true',
+                        help="count how many documents each word appears in")
+
     parser.add_argument('-m', '--print-char-map', action='store_true',
                         help="print dictionary remapping the characters")
 
@@ -172,6 +210,10 @@ def main():
     args = parser.parse_args()
 
     remap = mappings.get_charmap(args.language_mapping)
+
+    if args.count_words_doc_freq:
+        texts = language.load_corpus(args.corpus, remap, args.exclude_test)
+        count_words_doc_freq(texts, ignore_case=args.ignore_case)
 
     text = language.concat_corpus(args.corpus, remap, args.exclude_test)
 
