@@ -67,3 +67,38 @@ dispensible_chars = set('\x0b\x0c\r'.decode('utf8') + u'\ufeff\xad\x85' +
 single_quotes = set("'‘’‘‘".decode('utf8') + u'\u2018')
 
 double_quotes = set('‟"„“”'.decode('utf8'))
+
+
+def unify_case(text):
+    #trickier than .lower() because of the decomposed case marker
+    text = text.lower()
+    return text.replace("¹".decode('utf8'), "")
+
+
+def split_words(text, ignore_case=False):
+    if not isinstance(text, unicode):
+        text = text.decode('utf8')
+    if ignore_case:
+        text = unify_case(text)
+    text = re.sub(r"(?<=\w)'(?=\w)", r"³".decode('utf8'),
+                  text, flags=re.U)
+    words = re.split(r"[^\w³-]+".decode('utf8'), text, flags=re.U)
+    words = sum((w.split('--') for w in words), [])
+    words = [x.strip('-_') for x in words]
+    return [x for x in words if x]
+
+
+def decode_split_word(w):
+    return w.replace('³'.decode('utf8'), "'")
+
+
+def print_word_counts(c):
+    prev_n = None
+    for w, n in c.most_common():
+        if n != prev_n:
+            print "\n------------- %s --------------" % n
+            prev_n = n
+        w = decode_split_word(w)
+        print w,
+    print
+    print len(c)
