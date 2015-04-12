@@ -11,6 +11,7 @@ import json
 import language
 import unicodedata
 from collections import Counter
+import mappings
 
 def count_words(text, ignore_case=False):
     text = text.decode('utf8')
@@ -160,9 +161,14 @@ def main():
     parser.add_argument('--collapse-latin', action='store_true',
                         help="Treat all latin characters the same")
 
+    parser.add_argument('-M', '--language-mapping',
+                        help="use this character mapping")
+
     args = parser.parse_args()
 
-    text = language.concat_corpus(args.corpus, args.exclude_test)
+    remap = mappings.get_charmap(args.language_mapping)
+
+    text = language.concat_corpus(args.corpus, remap, args.exclude_test)
 
     if args.count_chars:
         count_chars(text, decompose=args.decompose_unicode,

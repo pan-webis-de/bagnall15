@@ -15,15 +15,9 @@ test_fn_search = re.compile(TRAINING_FN_PATTERN).search
 def always(x):
     return True
 
-#XXX assumes NFKD norm
-def remap_text(text, charmap):
-    text = text.decode('utf8')
-    text = unicodedata.normalize('NFKD', text)
-    return ''.join(charmap(x) for x in text).encode('utf8')
-
-
-def load_texts(srcdir, class_accept=always, file_accept=training_fn_search,
-               charmap=None):
+def load_texts(srcdir, remap,
+               class_accept=always,
+               file_accept=training_fn_search):
     texts = {}
     for subdir in os.listdir(srcdir):
         if not class_accept(subdir):
@@ -35,17 +29,15 @@ def load_texts(srcdir, class_accept=always, file_accept=training_fn_search,
             if file_accept(fn):
                 ffn = os.path.join(full_subdir, fn)
                 f = open(ffn)
-                text = f.read()
-                if charmap:
-                    text = remap_text(text, charmap)
+                text = remap(f.read())
                 texts.setdefault(subdir, []).append(text)
                 f.close()
     return texts
 
 
-def concat_corpus(srcdir, exclude_test=False):
+def concat_corpus(srcdir, remap, exclude_test=False):
     accept = training_fn_search if exclude_test else always
-    texts = load_texts(srcdir, file_accept=accept)
+    texts = load_texts(srcdir, remap, file_accept=accept)
     all_texts = []
     for v in texts.values():
         all_texts.extend(v)

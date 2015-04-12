@@ -10,6 +10,7 @@ import json
 from language import load_texts, always
 import mappings
 
+
 def get_alphabet(texts):
     text = ''.join(''.join(x) for x in texts)
     a = charmodel.Alphabet(text, ignore_case=False, threshold=3e-6)
@@ -27,11 +28,10 @@ def encode_and_cycle_texts(alphabet, texts):
             for k, v in texts.items()}
 
 
-def train(srcdir, accept_fn, leakage, batch_size, 
+def train(srcdir, remap, accept_fn, leakage, batch_size,
           sub_epochs, leakage_decay, learn_rate_decay,
-          ignore_start, charmap,
-          **kwargs):
-    raw_texts = load_texts(srcdir, accept_fn, charmap=charmap)
+          ignore_start, **kwargs):
+    raw_texts = load_texts(srcdir, remap, accept_fn)
     alphabet = get_alphabet(raw_texts.values())
     textnames = sorted(raw_texts.keys())
 
@@ -138,14 +138,10 @@ def main():
     else:
         accept_fn = always
 
-    if args.language_mapping:
-        mod = getattr(mappings, args.language_mapping)
-        charmap = mod.charmap.get
-    else:
-        charmap = None
+    remap = mappings.get_charmap(args.language_mapping)
 
-    train(args.srcdir, accept_fn, args.leakage, 
-          args.batch_size, args.sub_epochs, 
+    train(args.srcdir, remap, accept_fn, args.leakage,
+          args.batch_size, args.sub_epochs,
           args.leakage_decay, args.learn_rate_decay,
           bptt_depth=args.bptt_depth,
           hidden_size=args.hidden_size,
@@ -157,6 +153,6 @@ def main():
           basename=args.basename, activation=args.activation,
           learning_method=args.learning_method,
           ignore_start=args.ignore_start,
-          charmap=charmap, filename=args.filename)
+          filename=args.filename)
 
 main()
