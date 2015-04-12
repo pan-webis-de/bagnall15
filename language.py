@@ -43,6 +43,7 @@ def concat_corpus(srcdir, remap, exclude_test=False):
         all_texts.extend(v)
     return '\n'.join(all_texts)
 
+
 def load_corpus(srcdir, remap, exclude_test=False):
     accept = training_fn_search if exclude_test else always
     texts = load_texts(srcdir, remap, file_accept=accept)
@@ -50,6 +51,7 @@ def load_corpus(srcdir, remap, exclude_test=False):
     for v in texts.values():
         all_texts.extend(v)
     return all_texts
+
 
 def count_chars(text, decompose=False):
     text = text.decode('utf-8')
