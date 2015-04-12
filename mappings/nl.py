@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# OPTIONS: threshold 1e-05, dotellipses collapse_dashes collapse_digits decompose_caps decompose
+# OPTIONS: threshold 1e-05, dotellipses collapse_brackets collapse_dashes collapse_digits decompose_caps decompose
 charmap = {
     u' ': u' ',                 # kept Zs (106932)
     u'e': u'e',
@@ -83,13 +83,13 @@ charmap = {
     u'&': u'&',                 # kept Po (73)
     u'%': u'%',                 # kept Po (67)
     u'\u0300': u'\u0300',       # "̀" -> "̀"  kept Mn (58) COMBINING GRAVE ACCENT
-    u'[': u'[',                 # kept Ps (34)
-    u']': u']',                 # kept Pe (34)
+    u'[': u'(',                 # brackets
+    u']': u')',                 # brackets
     u'\u2013': u'\u2014',       # "–" -> "—"  unified dash EN DASH
     u'Q': u'q\xb9',             # decomposed caps 
     u'\u2028': '',              # " " -> ""  dispensible LINE SEPARATOR
     u'\u0302': u'\u0302',       # "̂" -> "̂"  kept Mn (7) COMBINING CIRCUMFLEX ACCENT
-    u'+': u'+',                 # kept Sm (6)
+    u'+': '',                   # dispensible
     u'Y': u'y\xb9',             # decomposed caps kept letter under threshold 4 < 6
     u'\u201f': '"',             # "‟" -> """  double quote DOUBLE HIGH-REVERSED-9 QUOTATION MARK
     u'\u201e': '"',             # "„" -> """  double quote DOUBLE LOW-9 QUOTATION MARK
@@ -98,4 +98,4 @@ charmap = {
     u'*': '',                   # removed Po, 1 < 6
     u'\u0327': '',              # "̧" -> ""   removed Mn, 1 < 6 COMBINING CEDILLA
 }
-# mapping 96 characters to 51, (decomposed)
+# mapping 96 characters to 48, (decomposed)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# OPTIONS: threshold 1e-05, dotellipses collapse_dashes collapse_latin collapse_digits decompose_caps decompose
+# OPTIONS: threshold 1e-05, dotellipses collapse_brackets collapse_dashes collapse_latin collapse_digits decompose_caps decompose
 charmap = {
     u' ': u' ',                 # kept Zs (262771)
     u'\u03b1': u'\u03b1',       # "α" -> "α"   GREEK SMALL LETTER ALPHA
@@ -138,12 +138,12 @@ charmap = {
     u'q': 's',                  # kept letter under threshold 13 < 18
     u'$': '',                   # removed Sc, 6 < 18
     u'?': '',                   # removed Po, 6 < 18
-    u'+': '',                   # removed Sm, 4 < 18
+    u'+': '',                   # dispensible
     u'Q': u's\xb9',             # decomposed caps kept letter under threshold 4 < 18
     u'<': '',                   # removed Sm, 2 < 18
-    u'[': '',                   # removed Ps, 2 < 18
+    u'[': u'(',                 # brackets
     u'\u2028': '',              # " " -> ""  dispensible LINE SEPARATOR
     u'Z': u's\xb9',             # decomposed caps kept letter under threshold 2 < 18
-    u']': '',                   # removed Pe, 2 < 18
+    u']': u')',                 # brackets
 }
 # mapping 144 characters to 48, (decomposed)

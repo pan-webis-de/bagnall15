@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# OPTIONS: threshold 1e-05, dotellipses collapse_dashes collapse_digits decompose_caps decompose
+# OPTIONS: threshold 1e-05, dotellipses collapse_brackets collapse_dashes collapse_digits decompose_caps decompose
 charmap = {
     u' ': u' ',                 # kept Zs (92447)
     u'e': u'e',
@@ -62,16 +62,16 @@ charmap = {
     u'K': u'k\xb9',             # decomposed caps 
     u'Q': u'q\xb9',             # decomposed caps 
     u'U': u'u\xb9',             # decomposed caps 
-    u'_': u'_',                 # kept Pc (42)
+    u'_': '',                   # dispensible
     u':': u':',                 # kept Po (40)
-    u'[': u'[',                 # kept Ps (24)
+    u'[': u'(',                 # brackets
     u'(': u'(',                 # kept Ps (23)
     u')': u')',                 # kept Pe (21)
-    u']': u']',                 # kept Pe (15)
-    u'}': u'}',                 # kept Pe (10)
-    u'{': u'{',                 # kept Ps (7)
-    u'\\': u'\\',               # kept Po (3)
+    u']': u')',                 # brackets
+    u'}': u')',                 # brackets
+    u'{': u'(',                 # brackets
+    u'\\': '',                  # dispensible
     u'\u0300': '',              # "̀" -> ""   removed Mn, 2 < 3 COMBINING GRAVE ACCENT
     u'Z': u'z\xb9',             # decomposed caps kept letter under threshold 2 < 3
 }
-# mapping 72 characters to 46, (decomposed)
+# mapping 72 characters to 40, (decomposed)

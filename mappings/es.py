@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# OPTIONS: threshold 1e-05, dotellipses collapse_dashes collapse_digits decompose_caps decompose
+# OPTIONS: threshold 1e-05, dotellipses collapse_brackets collapse_dashes collapse_digits decompose_caps decompose
 charmap = {
     u' ': u' ',                 # kept Zs (471317)
     u'e': u'e',
