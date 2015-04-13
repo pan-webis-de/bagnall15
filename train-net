@@ -79,6 +79,23 @@ def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
                              sum(entropies.values()) / len(entropies))
             print ("%s own %.3f mean %.3f diff %.3f" %
                    (name, own_e, mean_e, mean_e - own_e))
+        if test_texts:
+            py_entropies = []
+            for name, cycle in test_texts.items():
+                text = cycle.next()
+                py_entropies.append(net.test(text, ignore_start, 1))
+            import numpy as np
+            entropies = np.array(py_entropies)
+            rel_entropies = entropies - entropies.mean(axis=0)
+            self_scores = rel_entropies.diagonal()
+            medians = np.median(rel_entropies, axis=1)
+            indices = [sorted(m).index(s) for s, m
+                       in zip(self_scores, rel_entropies)]
+            for name, score, index, median in zip(net.class_names, self_scores,
+                                                  indices, medians):
+                t = ground_truth_oracle(name)
+                print ("test: %s own % .3f median % .3f diff % .3f index %2d %s" %
+                       (name, score, median, median - score, index, t))
 
         net.save()
         leakage *= leakage_decay
