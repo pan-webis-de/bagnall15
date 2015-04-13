@@ -27,29 +27,29 @@ charmap = {
     u'.': u'.',                 # kept Po (6000)
     u'f': u'f',
     u',': u',',                 # kept Po (3025)
-    u'D': u'd\xb9',             # decomposed caps 
-    u'H': u'h\xb9',             # decomposed caps 
-    u'E': u'e\xb9',             # decomposed caps 
-    u'V': u'v\xb9',             # decomposed caps 
+    u'D': u'\xb9d',             # decomposed caps
+    u'H': u'\xb9h',             # decomposed caps
+    u'E': u'\xb9e',             # decomposed caps
+    u'V': u'\xb9v',             # decomposed caps
     u'y': u'y',
     u"'": "'",                  # single quote
     u'2': '7',                  # digit
-    u'A': u'a\xb9',             # decomposed caps 
+    u'A': u'\xb9a',             # decomposed caps
     u'0': '7',                  # digit
-    u'B': u'b\xb9',             # decomposed caps 
-    u'M': u'm\xb9',             # decomposed caps 
+    u'B': u'\xb9b',             # decomposed caps
+    u'M': u'\xb9m',             # decomposed caps
     u'1': '7',                  # digit
-    u'I': u'i\xb9',             # decomposed caps 
+    u'I': u'\xb9i',             # decomposed caps
     u'-': u'-',                 # kept Pd (434)
-    u'W': u'w\xb9',             # decomposed caps 
-    u'S': u's\xb9',             # decomposed caps 
+    u'W': u'\xb9w',             # decomposed caps
+    u'S': u'\xb9s',             # decomposed caps
     u')': u')',                 # kept Pe (388)
     u'(': u'(',                 # kept Ps (385)
-    u'O': u'o\xb9',             # decomposed caps 
-    u'N': u'n\xb9',             # decomposed caps 
-    u'Z': u'z\xb9',             # decomposed caps 
+    u'O': u'\xb9o',             # decomposed caps
+    u'N': u'\xb9n',             # decomposed caps
+    u'Z': u'\xb9z',             # decomposed caps
     u'\u0308': u'\u0308',       # "̈" -> "̈"  kept Mn (331) COMBINING DIAERESIS
-    u'T': u't\xb9',             # decomposed caps 
+    u'T': u'\xb9t',             # decomposed caps
     u'?': u'?',                 # kept Po (317)
     u':': u':',                 # kept Po (306)
     u'\ufeff': '',              # "﻿" -> ""  dispensible ZERO WIDTH NO-BREAK SPACE
@@ -58,26 +58,26 @@ charmap = {
     u'x': u'x',
     u'\u0301': u'\u0301',       # "́" -> "́"  kept Mn (223) COMBINING ACUTE ACCENT
     u'\u2018': "'",             # "‘" -> "'"  single quote LEFT SINGLE QUOTATION MARK
-    u'G': u'g\xb9',             # decomposed caps 
+    u'G': u'\xb9g',             # decomposed caps
     u'9': '7',                  # digit
     u'3': '7',                  # digit
-    u'L': u'l\xb9',             # decomposed caps 
-    u'C': u'c\xb9',             # decomposed caps 
+    u'L': u'\xb9l',             # decomposed caps
+    u'C': u'\xb9c',             # decomposed caps
     u'4': '7',                  # digit
-    u'P': u'p\xb9',             # decomposed caps 
+    u'P': u'\xb9p',             # decomposed caps
     u'5': '7',                  # digit
     u'q': u'q',
     u'"': '"',                  # double quote
-    u'R': u'r\xb9',             # decomposed caps 
-    u'K': u'k\xb9',             # decomposed caps 
+    u'R': u'\xb9r',             # decomposed caps
+    u'K': u'\xb9k',             # decomposed caps
     u'8': '7',                  # digit
-    u'J': u'j\xb9',             # decomposed caps 
+    u'J': u'\xb9j',             # decomposed caps
     u'6': '7',                  # digit
     u'!': u'!',                 # kept Po (87)
-    u'F': u'f\xb9',             # decomposed caps 
+    u'F': u'\xb9f',             # decomposed caps
     u';': u';',                 # kept Po (80)
     u'\u201d': '"',             # "”" -> """  double quote RIGHT DOUBLE QUOTATION MARK
-    u'U': u'u\xb9',             # decomposed caps 
+    u'U': u'\xb9u',             # decomposed caps
     u'\u201c': '"',             # "“" -> """  double quote LEFT DOUBLE QUOTATION MARK
     u'7': '7',                  # digit
     u'&': u'&',                 # kept Po (73)
@@ -86,11 +86,11 @@ charmap = {
     u'[': u'(',                 # brackets
     u']': u')',                 # brackets
     u'\u2013': u'\u2014',       # "–" -> "—"  unified dash EN DASH
-    u'Q': u'q\xb9',             # decomposed caps 
+    u'Q': u'\xb9q',             # decomposed caps
     u'\u2028': '',              # " " -> ""  dispensible LINE SEPARATOR
     u'\u0302': u'\u0302',       # "̂" -> "̂"  kept Mn (7) COMBINING CIRCUMFLEX ACCENT
     u'+': '',                   # dispensible
-    u'Y': u'y\xb9',             # decomposed caps kept letter under threshold 4 < 6
+    u'Y': u'\xb9y',             # decomposed caps kept letter under threshold 4 < 6
     u'\u201f': '"',             # "‟" -> """  double quote DOUBLE HIGH-REVERSED-9 QUOTATION MARK
     u'\u201e': '"',             # "„" -> """  double quote DOUBLE LOW-9 QUOTATION MARK
     u'\u20ac': '',              # "€" -> ""  removed Sc, 2 < 6 EURO SIGN

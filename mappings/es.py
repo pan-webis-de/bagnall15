@@ -29,44 +29,44 @@ charmap = {
     u'z': u'z',
     u'j': u'j',
     u'\n': u'\n',               # kept Cc (5858)
-    u'E': u'e\xb9',             # decomposed caps 
-    u'P': u'p\xb9',             # decomposed caps 
+    u'E': u'\xb9e',             # decomposed caps
+    u'P': u'\xb9p',             # decomposed caps
     u'\r': '',                  # dispensible
     u'x': u'x',
-    u'L': u'l\xb9',             # decomposed caps 
-    u'C': u'c\xb9',             # decomposed caps 
+    u'L': u'\xb9l',             # decomposed caps
+    u'C': u'\xb9c',             # decomposed caps
     u'\u0303': u'\u0303',       # "̃" -> "̃"  kept Mn (3882) COMBINING TILDE
-    u'M': u'm\xb9',             # decomposed caps 
-    u'A': u'a\xb9',             # decomposed caps 
-    u'N': u'n\xb9',             # decomposed caps 
+    u'M': u'\xb9m',             # decomposed caps
+    u'A': u'\xb9a',             # decomposed caps
+    u'N': u'\xb9n',             # decomposed caps
     u'\u201c': '"',             # "“" -> """  double quote LEFT DOUBLE QUOTATION MARK
     u'\u201d': '"',             # "”" -> """  double quote RIGHT DOUBLE QUOTATION MARK
-    u'S': u's\xb9',             # decomposed caps 
-    u'I': u'i\xb9',             # decomposed caps 
+    u'S': u'\xb9s',             # decomposed caps
+    u'I': u'\xb9i',             # decomposed caps
     u'1': '7',                  # digit
     u':': u':',                 # kept Po (1944)
-    u'R': u'r\xb9',             # decomposed caps 
-    u'G': u'g\xb9',             # decomposed caps 
+    u'R': u'\xb9r',             # decomposed caps
+    u'G': u'\xb9g',             # decomposed caps
     u'0': '7',                  # digit
-    u'D': u'd\xb9',             # decomposed caps 
-    u'T': u't\xb9',             # decomposed caps 
+    u'D': u'\xb9d',             # decomposed caps
+    u'T': u'\xb9t',             # decomposed caps
     u'2': '7',                  # digit
-    u'H': u'h\xb9',             # decomposed caps 
-    u'Y': u'y\xb9',             # decomposed caps 
-    u'O': u'o\xb9',             # decomposed caps 
-    u'U': u'u\xb9',             # decomposed caps 
-    u'F': u'f\xb9',             # decomposed caps 
+    u'H': u'\xb9h',             # decomposed caps
+    u'Y': u'\xb9y',             # decomposed caps
+    u'O': u'\xb9o',             # decomposed caps
+    u'U': u'\xb9u',             # decomposed caps
+    u'F': u'\xb9f',             # decomposed caps
     u'\u2013': u'\u2014',       # "–" -> "—"  unified dash EN DASH
     u'\xbf': u'\xbf',           # "¿" -> "¿"  kept Po (924) INVERTED QUESTION MARK
     u'?': u'?',                 # kept Po (924)
-    u'B': u'b\xb9',             # decomposed caps 
+    u'B': u'\xb9b',             # decomposed caps
     u'(': u'(',                 # kept Ps (872)
     u')': u')',                 # kept Pe (872)
     u'\u2014': u'\u2014',       # "—" -> "—"  unified dash EM DASH
     u';': u';',                 # kept Po (743)
-    u'Q': u'q\xb9',             # decomposed caps 
-    u'J': u'j\xb9',             # decomposed caps 
-    u'V': u'v\xb9',             # decomposed caps 
+    u'Q': u'\xb9q',             # decomposed caps
+    u'J': u'\xb9j',             # decomposed caps
+    u'V': u'\xb9v',             # decomposed caps
     u'4': '7',                  # digit
     u'6': '7',                  # digit
     u'\ufeff': '',              # "﻿" -> ""  dispensible ZERO WIDTH NO-BREAK SPACE
@@ -79,12 +79,12 @@ charmap = {
     u'8': '7',                  # digit
     u'/': u'/',                 # kept Po (352)
     u'w': u'w',
-    u'K': u'k\xb9',             # decomposed caps 
-    u'X': u'x\xb9',             # decomposed caps 
+    u'K': u'\xb9k',             # decomposed caps
+    u'X': u'\xb9x',             # decomposed caps
     u'7': '7',                  # digit
-    u'Z': u'z\xb9',             # decomposed caps 
+    u'Z': u'\xb9z',             # decomposed caps
     u'\u2019': "'",             # "’" -> "'"  single quote RIGHT SINGLE QUOTATION MARK
-    u'W': u'w\xb9',             # decomposed caps 
+    u'W': u'\xb9w',             # decomposed caps
     u'%': u'%',                 # kept Po (130)
     u'!': u'!',                 # kept Po (95)
     u'\xab': u'\xab',           # "«" -> "«"  kept Pi (54) LEFT-POINTING DOUBLE ANGLE QUOTATION MARK

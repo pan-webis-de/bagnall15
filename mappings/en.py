@@ -28,40 +28,40 @@ charmap = {
     u'p': u'p',
     u'-': u'-',                 # kept Pd (3253)
     u'k': u'k',
-    u'I': u'i\xb9',             # decomposed caps 
+    u'I': u'\xb9i',             # decomposed caps
     u'v': u'v',
     u'!': u'!',                 # kept Po (1901)
-    u'A': u'a\xb9',             # decomposed caps 
+    u'A': u'\xb9a',             # decomposed caps
     u'?': u'?',                 # kept Po (1336)
-    u'T': u't\xb9',             # decomposed caps 
-    u'W': u'w\xb9',             # decomposed caps 
-    u'S': u's\xb9',             # decomposed caps 
-    u'H': u'h\xb9',             # decomposed caps 
-    u'M': u'm\xb9',             # decomposed caps 
-    u'Y': u'y\xb9',             # decomposed caps 
-    u'B': u'b\xb9',             # decomposed caps 
-    u'O': u'o\xb9',             # decomposed caps 
-    u'C': u'c\xb9',             # decomposed caps 
-    u'D': u'd\xb9',             # decomposed caps 
-    u'N': u'n\xb9',             # decomposed caps 
-    u'G': u'g\xb9',             # decomposed caps 
+    u'T': u'\xb9t',             # decomposed caps
+    u'W': u'\xb9w',             # decomposed caps
+    u'S': u'\xb9s',             # decomposed caps
+    u'H': u'\xb9h',             # decomposed caps
+    u'M': u'\xb9m',             # decomposed caps
+    u'Y': u'\xb9y',             # decomposed caps
+    u'B': u'\xb9b',             # decomposed caps
+    u'O': u'\xb9o',             # decomposed caps
+    u'C': u'\xb9c',             # decomposed caps
+    u'D': u'\xb9d',             # decomposed caps
+    u'N': u'\xb9n',             # decomposed caps
+    u'G': u'\xb9g',             # decomposed caps
     u';': u';',                 # kept Po (313)
-    u'L': u'l\xb9',             # decomposed caps 
+    u'L': u'\xb9l',             # decomposed caps
     u'j': u'j',
-    u'P': u'p\xb9',             # decomposed caps 
-    u'F': u'f\xb9',             # decomposed caps 
+    u'P': u'\xb9p',             # decomposed caps
+    u'F': u'\xb9f',             # decomposed caps
     u'q': u'q',
-    u'E': u'e\xb9',             # decomposed caps 
+    u'E': u'\xb9e',             # decomposed caps
     u'\t': '  ',                # tab
     u'x': u'x',
-    u'R': u'r\xb9',             # decomposed caps 
+    u'R': u'\xb9r',             # decomposed caps
     u'"': '"',                  # double quote
-    u'J': u'j\xb9',             # decomposed caps 
+    u'J': u'\xb9j',             # decomposed caps
     u'z': u'z',
-    u'V': u'v\xb9',             # decomposed caps 
-    u'K': u'k\xb9',             # decomposed caps 
-    u'Q': u'q\xb9',             # decomposed caps 
-    u'U': u'u\xb9',             # decomposed caps 
+    u'V': u'\xb9v',             # decomposed caps
+    u'K': u'\xb9k',             # decomposed caps
+    u'Q': u'\xb9q',             # decomposed caps
+    u'U': u'\xb9u',             # decomposed caps
     u'_': '',                   # dispensible
     u':': u':',                 # kept Po (40)
     u'[': u'(',                 # brackets
@@ -72,6 +72,6 @@ charmap = {
     u'{': u'(',                 # brackets
     u'\\': '',                  # dispensible
     u'\u0300': '',              # "̀" -> ""   removed Mn, 2 < 3 COMBINING GRAVE ACCENT
-    u'Z': u'z\xb9',             # decomposed caps kept letter under threshold 2 < 3
+    u'Z': u'\xb9z',             # decomposed caps kept letter under threshold 2 < 3
 }
 # mapping 72 characters to 40, (decomposed)
