@@ -113,7 +113,7 @@ def print_char_map(text, threshold=1e-5, decompose=False,
             m = m.lower()
             note = "ignore case %s" % note
         elif decompose_caps and category == 'Lu':
-            m = m.lower() + u'\u00B9'
+            m = u'\u00B9' + m.lower()
             note = "decomposed caps %s" % note
 
         if ord(c) > 127 or (len(m) == 1 and ord(m) > 127):
