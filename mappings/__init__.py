@@ -18,6 +18,7 @@ def get_charmap(lang):
     def mapper(text):
         text = text.decode('utf8')
         text = unicodedata.normalize('NFKD', text)
-        return u''.join(charmap.get(x, u'') for x in text).encode('utf8')
+        text = u''.join(charmap.get(x, u'') for x in text).encode('utf8')
+        return re.sub(r'(\w)\1\1\1\1\1+', r'\1\1\1\1\1', text, flags=re.U)
 
     return mapper
