@@ -10,6 +10,14 @@ import json
 from language import load_texts, always, test_fn_search, training_fn_search
 import mappings
 
+def get_ground_truth(srcdir):
+    truth = {}
+    f = open(os.path.join(srcdir, 'truth.txt'))
+    for line in f:
+        name, yn = line.strip().split()
+        truth[name] = yn == 'Y'
+    f.close()
+    return truth
 
 def get_alphabet(texts):
     text = ''.join(''.join(x) for x in texts)
@@ -49,8 +57,11 @@ def get_net_and_corpus(srcdir, remap, accept_fn, **kwargs):
     return net, training_texts, test_texts
 
 
+def no_answer(*args):
+    pass
+
 def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
-          ignore_start):
+          ignore_start, test_texts=None, ground_truth_oracle=no_answer):
 
     validation_texts = [(k, v.next()) for k, v in texts.items()[:5]]
 
@@ -172,7 +183,12 @@ def main():
                                                          remap, accept_fn,
                                                          **net_kwargs)
 
-    train(net, texts, args.leakage, args.sub_epochs, args.leakage_decay,
-          args.learn_rate_decay, args.ignore_start)
+    ground_truth_oracle = get_ground_truth(args.srcdir).get
+
+    train(net, training_texts, args.leakage, args.sub_epochs,
+          args.leakage_decay, args.learn_rate_decay, args.ignore_start,
+          test_texts=test_texts, ground_truth_oracle=ground_truth_oracle)
+
+
 
 main()
