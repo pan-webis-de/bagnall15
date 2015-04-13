@@ -13,9 +13,8 @@ import mappings
 
 def get_alphabet(texts):
     text = ''.join(''.join(x) for x in texts)
-    a = charmodel.Alphabet(text, ignore_case=False, threshold=3e-6)
-    print >>sys.stderr, a.alphabet
-    print >>sys.stderr, a.collapsed_chars
+    a = charmodel.Alphabet(text, ignore_case=False, threshold=1e-9)
+    print >>sys.stderr, "alphabet is %s" % (a.alphabet,)
     return a
 
 
@@ -24,6 +23,7 @@ def get_net(alphabet, classnames, **kwargs):
 
 
 def encode_and_cycle_texts(alphabet, texts):
+    print >>sys.stderr, "remapping texts"
     return {k: itertools.cycle(alphabet.encode_text(x) for x in v)
             for k, v in texts.items()}
 
