@@ -122,7 +122,7 @@ def print_char_map(text, threshold=1e-5, decompose=False,
 
         if note:
             s = "    %r: %r," % (c, m)
-            print "%-30s  # %s" % (s, note)
+            print "%-30s  # %s" % (s, note.rstrip())
         else:
             print "    %r: %r," % (c, m)
         remapped_chars.update(m)

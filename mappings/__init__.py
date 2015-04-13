@@ -3,10 +3,10 @@ import en
 import gr
 import nl
 import unicodedata
+import re
 
 def nullmapper(x):
     return x
-
 
 #XXX assumes NFKD norm
 def get_charmap(lang):
