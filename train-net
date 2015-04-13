@@ -18,19 +18,13 @@ def get_alphabet(texts):
     return a
 
 
-def get_net(alphabet, classnames, **kwargs):
-    return charmodel.Net(alphabet, classnames, **kwargs)
-
-
 def encode_and_cycle_texts(alphabet, texts):
     print >>sys.stderr, "remapping texts"
     return {k: itertools.cycle(alphabet.encode_text(x) for x in v)
             for k, v in texts.items()}
 
 
-def train(srcdir, remap, accept_fn, leakage, batch_size,
-          sub_epochs, leakage_decay, learn_rate_decay,
-          ignore_start, **kwargs):
+def get_net_and_corpus(srcdir, remap, accept_fn, **kwargs):
     raw_texts = load_texts(srcdir, remap, accept_fn)
     alphabet = get_alphabet(raw_texts.values())
     textnames = sorted(raw_texts.keys())
@@ -45,12 +39,15 @@ def train(srcdir, remap, accept_fn, leakage, batch_size,
         'collapse_space': False,
     }, sort_keys=True)
 
-    net = get_net(alphabet, textnames, metadata=metadata, **kwargs)
-
-    net.batch_size = batch_size
-
+    net = charmodel.Net(alphabet, textnames, metadata=metadata, **kwargs)
     texts = encode_and_cycle_texts(alphabet, raw_texts)
-    validation_texts = [(k, texts[k].next()) for k in textnames[:5]]
+    return net, texts
+
+
+def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
+          ignore_start):
+
+    validation_texts = [(k, v.next()) for k, v in texts.items()[:5]]
 
     for i in range(sub_epochs):
         print ("doing sub-epoch %d with learn-rate %s, "
@@ -60,12 +57,12 @@ def train(srcdir, remap, accept_fn, leakage, batch_size,
             net.train(cycle.next(), name, leakage=leakage,
                       ignore_start=ignore_start)
 
-        for j, x in enumerate(validation_texts):
-            name, text = x
+        for name, text in validation_texts:
             entropies = net.test(text, ignore_start)
-            own_e, ave_e = (entropies[j], sum(entropies) / len(entropies))
-            print ("%s own %.3f ave %.3f diff %.3f" %
-                   (name, own_e, ave_e, ave_e - own_e))
+            own_e, mean_e = (entropies[name],
+                             sum(entropies.values()) / len(entropies))
+            print ("%s own %.3f mean %.3f diff %.3f" %
+                   (name, own_e, mean_e, mean_e - own_e))
 
         net.save()
         leakage *= leakage_decay
@@ -148,19 +145,28 @@ def main():
 
     remap = mappings.get_charmap(args.language_mapping)
 
-    train(args.srcdir, remap, accept_fn, args.leakage,
-          args.batch_size, args.sub_epochs,
-          args.leakage_decay, args.learn_rate_decay,
-          bptt_depth=args.bptt_depth,
-          hidden_size=args.hidden_size,
-          rng_seed=args.rng_seed, log_file=args.log_file,
-          verbose=args.verbose, learn_rate=args.learn_rate,
-          temporal_pgm_dump=args.temporal_pgm_dump,
-          periodic_pgm_dump=args.periodic_pgm_dump,
-          periodic_pgm_period=args.periodic_pgm_period,
-          basename=args.basename, activation=args.activation,
-          learning_method=args.learning_method,
-          ignore_start=args.ignore_start,
-          filename=args.filename)
+    net_kwargs = {}
+    for k, v in vars(args).items():
+        if k in ("bptt_depth",
+                "hidden_size",
+                 "rng_seed",
+                 "log_file",
+                 "verbose",
+                 "learn_rate",
+                 "temporal_pgm_dump",
+                 "periodic_pgm_dump",
+                 "periodic_pgm_period",
+                 "basename",
+                 "activation",
+                 "learning_method",
+                 "batch_size",
+                 "filename"):
+            net_kwargs[k] = v
+
+    net, texts = get_net_and_corpus(args.srcdir, remap, accept_fn,
+                                    **net_kwargs)
+
+    train(net, texts, args.leakage, args.sub_epochs, args.leakage_decay,
+          args.learn_rate_decay, args.ignore_start)
 
 main()
