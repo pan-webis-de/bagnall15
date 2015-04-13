@@ -7,7 +7,7 @@ import random
 import itertools
 import re
 import json
-from language import load_texts, always
+from language import load_texts, always, test_fn_search, training_fn_search
 import mappings
 
 
@@ -25,9 +25,13 @@ def encode_and_cycle_texts(alphabet, texts):
 
 
 def get_net_and_corpus(srcdir, remap, accept_fn, **kwargs):
-    raw_texts = load_texts(srcdir, remap, accept_fn)
-    alphabet = get_alphabet(raw_texts.values())
-    textnames = sorted(raw_texts.keys())
+    raw_training_texts = load_texts(srcdir, remap, accept_fn,
+                                    training_fn_search)
+    raw_test_texts = load_texts(srcdir, remap, accept_fn,
+                                test_fn_search)
+    alphabet = get_alphabet(raw_training_texts.values() +
+                            raw_test_texts.values())
+    textnames = sorted(raw_training_texts.keys())
 
     metadata = json.dumps({
         'alphabet': alphabet.alphabet,
@@ -40,8 +44,9 @@ def get_net_and_corpus(srcdir, remap, accept_fn, **kwargs):
     }, sort_keys=True)
 
     net = charmodel.Net(alphabet, textnames, metadata=metadata, **kwargs)
-    texts = encode_and_cycle_texts(alphabet, raw_texts)
-    return net, texts
+    training_texts = encode_and_cycle_texts(alphabet, raw_training_texts)
+    test_texts = encode_and_cycle_texts(alphabet, raw_test_texts)
+    return net, training_texts, test_texts
 
 
 def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
@@ -163,8 +168,9 @@ def main():
                  "filename"):
             net_kwargs[k] = v
 
-    net, texts = get_net_and_corpus(args.srcdir, remap, accept_fn,
-                                    **net_kwargs)
+    net, training_texts, test_texts = get_net_and_corpus(args.srcdir,
+                                                         remap, accept_fn,
+                                                         **net_kwargs)
 
     train(net, texts, args.leakage, args.sub_epochs, args.leakage_decay,
           args.learn_rate_decay, args.ignore_start)

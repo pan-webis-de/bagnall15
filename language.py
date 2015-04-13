@@ -9,7 +9,7 @@ TRAINING_FN_PATTERN = r'^known\d+\.txt$'
 TEST_FN_PATTERN = r'^unknown\.txt$'
 
 training_fn_search = re.compile(TRAINING_FN_PATTERN).search
-test_fn_search = re.compile(TRAINING_FN_PATTERN).search
+test_fn_search = re.compile(TEST_FN_PATTERN).search
 
 
 def always(x):
