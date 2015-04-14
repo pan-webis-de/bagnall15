@@ -86,11 +86,7 @@ def maybe_swap_texts(training_texts, test_texts, threshold=0.9):
             training_texts[k] = test_cycle
 
 
-def no_answer(*args):
-    pass
-
-
-def test(net, ignore_start, test_texts, ground_truth_oracle=no_answer):
+def get_entropies_matrix(net, ignore_start, test_texts):
     py_entropies = []
     lengths = []
     for name in net.class_names:
@@ -102,10 +98,71 @@ def test(net, ignore_start, test_texts, ground_truth_oracle=no_answer):
         lengths.append(len(text))
         e = net.test(text, ignore_start, 1)
         py_entropies.append(e)
+    return np.array(py_entropies)
 
-    entropies = np.array(py_entropies)
+
+def print_pan_results(net, ignore_start, test_texts, hedge=0.04):
+    entropies = get_entropies_matrix(net, ignore_start, test_texts)
+    #rel_entropies = entropies - entropies.mean(axis=0)
+    rel_entropies = entropies - np.median(entropies, axis=0)
+
+    norm = np.linalg.norm(rel_entropies, ord=1, axis=1)
+    if np.all(norm):
+        rel_entropies /= norm[:,None]
+
+    medians = np.median(rel_entropies, axis=1)
+
+    if 'control' in net.class_names:
+        control_index = net.class_names.index('control')
+        re_entropies = np.delete(rel_entropies,
+                                 control_index, axis=1)
+
+    self_scores = rel_entropies.diagonal()
+
+    indices = [sorted(m).index(s) for s, m
+               in zip(self_scores, rel_entropies)]
+
+    index_counts = [0] * len(net.class_names)
+    for index in indices:
+        index_counts[index] += 1
+
+    cum_counts = []
+    total = 0
+    for n in index_counts:
+        total += n
+        cum_counts.append(total)
+
+    n = len(cum_counts)
+    centre = n / 2
+    radius = int(n * hedge)
+    cat1_top = centre - radius
+    cat1_bottom = centre + radius
+    step = 0.95 / (n - 2 * radius)
+    score_map = []
+    for x in range(n):
+        if x < cat1_top:
+            s = 0.99 - step * x
+        elif x < cat1_bottom:
+            s = 0.5
+        else:
+            s = 0.49 - step * (x - cat1_bottom)
+        score_map.append(s)
+
+    for name, index in zip(net.class_names, indices):
+        print "%s %.3f" % (name, score_map[index])
+
+
+def no_answer(*args):
+    pass
+
+def test(net, ignore_start, test_texts, ground_truth_oracle=no_answer):
+    entropies = get_entropies_matrix(net, ignore_start, test_texts)
     rel_entropies = entropies - entropies.mean(axis=0)
     #rel_entropies = entropies - np.median(entropies, axis=0)
+
+    lengths = [len(test_texts.get(name).next())
+               for name in net.class_names
+               if name in test_texts]
 
     if True:
         norm = np.linalg.norm(rel_entropies, ord=1, axis=1)
@@ -220,6 +277,17 @@ def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
         net.learn_rate *= learn_rate_decay
 
 
+def train_silently(net, texts, leakage, sub_epochs, leakage_decay,
+                   learn_rate_decay, ignore_start):
+
+    for i in range(sub_epochs):
+        for name, cycle in texts.items():
+            net.train(cycle.next(), name, leakage=leakage,
+                      ignore_start=ignore_start)
+        leakage *= leakage_decay
+        net.learn_rate *= learn_rate_decay
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('srcdir', help="find training text here")
@@ -285,6 +353,9 @@ def main():
 
     parser.add_argument('--pan-output', action='store_true',
                         help="write answers in the style expected by PAN")
+    parser.add_argument('--pan-hedge', type=float, default=0.04,
+                        help="radius of undecided zone in pan output")
+
 
     args = parser.parse_args()
 
@@ -327,11 +398,19 @@ def main():
         maybe_swap_texts(training_texts, test_texts)
 
 
-    ground_truth_oracle = get_ground_truth(args.srcdir).get
+    if args.pan_output:
+        train_silently(net, training_texts, args.leakage,
+                       args.sub_epochs, args.leakage_decay,
+                       args.learn_rate_decay, args.ignore_start)
 
-    train(net, training_texts, args.leakage, args.sub_epochs,
-          args.leakage_decay, args.learn_rate_decay, args.ignore_start,
-          test_texts=test_texts, ground_truth_oracle=ground_truth_oracle)
+        print_pan_results(net, args.ignore_start, test_texts, args.pan_hedge)
+
+    else:
+        ground_truth_oracle = get_ground_truth(args.srcdir).get
+
+        train(net, training_texts, args.leakage, args.sub_epochs,
+              args.leakage_decay, args.learn_rate_decay, args.ignore_start,
+              test_texts=test_texts, ground_truth_oracle=ground_truth_oracle)
 
 
 
