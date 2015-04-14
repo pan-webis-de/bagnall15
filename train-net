@@ -10,6 +10,8 @@ import re
 import json
 from language import load_texts, always, test_fn_search, training_fn_search
 import mappings
+import numpy as np
+
 from colour import RED, GREEN, YELLOW, C_NORMAL
 
 def get_ground_truth(srcdir):
@@ -87,6 +89,92 @@ def maybe_swap_texts(training_texts, test_texts, threshold=0.9):
 def no_answer(*args):
     pass
 
+
+def test(net, ignore_start, test_texts, ground_truth_oracle=no_answer):
+    py_entropies = []
+    lengths = []
+    for name in net.class_names:
+        if name not in test_texts:
+            print "skipping %s" % name
+            continue
+        cycle = test_texts.get(name)
+        text = cycle.next()
+        lengths.append(len(text))
+        e = net.test(text, ignore_start, 1)
+        py_entropies.append(e)
+
+    entropies = np.array(py_entropies)
+    rel_entropies = entropies - entropies.mean(axis=0)
+    #rel_entropies = entropies - np.median(entropies, axis=0)
+
+    if True:
+        norm = np.linalg.norm(rel_entropies, ord=1, axis=1)
+        if np.all(norm):
+            rel_entropies /= norm[:,None]
+
+    medians = np.median(rel_entropies, axis=1)
+
+    try:
+        control_index = net.class_names.index('control')
+        self_scores = np.delete(rel_entropies,
+                                control_index, axis=1).diagonal()
+    except ValueError:
+        self_scores = rel_entropies.diagonal()
+
+    indices = [sorted(m).index(s) for s, m
+               in zip(self_scores, rel_entropies)]
+    #print indices
+    #print self_scores
+    sum_scores = [0, 0]
+    sum_index = [0, 0]
+    sum_diff = [0, 0]
+    n_true, n_false = 0., 0.
+    index_counts = [[0] * net.n_classes, [0] * net.n_classes]
+    for name, score, index, median, length in zip(net.class_names, self_scores,
+                                                  indices, medians, lengths):
+        t = ground_truth_oracle(name)
+        if t is None:
+            print "%s as no truth!" %name
+        print ("test: %s own % .3f median % .3f diff % .3f index %2d %5s %5db" %
+               (name, score, median, median - score, index, t, length))
+        sum_scores[t] += score
+        sum_index[t] += index
+        sum_diff[t] += median - score
+        n_true += t
+        n_false += not t
+        index_counts[t][index] += 1
+
+    print "scores:  N % .3f,  Y % .3f" % tuple(x / n_true
+                                               for x in sum_scores)
+    print "diffs:   N % .3f,  Y % .3f" % tuple(x / n_true
+                                               for x in sum_diff)
+    print "indices: N % .3f,  Y % .3f" % tuple(x / n_false
+                                               for x in sum_index)
+
+    t_colours = ([GREEN] * (net.n_classes / 4) +
+                 [YELLOW] * (net.n_classes / 3) +
+                 [RED] * (net.n_classes / 2))
+    f_colours = ([RED] * (net.n_classes / 4) +
+                 [YELLOW] * (net.n_classes / 3) +
+                 [GREEN] * (net.n_classes / 2))
+
+    sum_t, sum_f = 0, int(n_false)
+    scale = 1.0 / (n_true + n_false)
+
+    for i, tf in enumerate(zip(*index_counts)):
+        f, t = tf
+        s = t_colours[i]
+        s += 'T' * t
+        s += f_colours[i]
+        s += 'F' * f
+        sum_t += t
+        sum_f -= f
+        right = 't' * sum_t + 'f' * sum_f
+        print "%.2f %30s %s%.2f %s" % (i * scale, s, C_NORMAL,
+                                       float(sum_t + sum_f) / (n_true + n_false),
+                                       right)
+    print C_NORMAL
+
 def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
           ignore_start, test_texts=None, ground_truth_oracle=no_answer):
 
@@ -107,22 +195,7 @@ def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
             print ("%s own %.3f mean %.3f diff %.3f" %
                    (name, own_e, mean_e, mean_e - own_e))
         if test_texts:
-            py_entropies = []
-            for name, cycle in test_texts.items():
-                text = cycle.next()
-                py_entropies.append(net.test(text, ignore_start, 1))
-            import numpy as np
-            entropies = np.array(py_entropies)
-            rel_entropies = entropies - entropies.mean(axis=0)
-            self_scores = rel_entropies.diagonal()
-            medians = np.median(rel_entropies, axis=1)
-            indices = [sorted(m).index(s) for s, m
-                       in zip(self_scores, rel_entropies)]
-            for name, score, index, median in zip(net.class_names, self_scores,
-                                                  indices, medians):
-                t = ground_truth_oracle(name)
-                print ("test: %s own % .3f median % .3f diff % .3f index %2d %s" %
-                       (name, score, median, median - score, index, t))
+            test(net, ignore_start, test_texts, ground_truth_oracle)
 
         net.save()
         leakage *= leakage_decay
