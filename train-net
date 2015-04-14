@@ -283,6 +283,9 @@ def main():
     parser.add_argument('--try-swapping-texts', action='store_true',
                         help="if known text is short, train on unknown text")
 
+    parser.add_argument('--pan-output', action='store_true',
+                        help="write answers in the style expected by PAN")
+
     args = parser.parse_args()
 
     if args.enable_fp_exceptions:

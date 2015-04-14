@@ -1,0 +1,55 @@
+#!/usr/bin/python
+import argparse
+import os
+import sys
+import subprocess
+
+HERE = os.path.dirname(__file__)
+
+CONFIG = {
+    'EN' : ['-H119', '-e30', '-M', 'en',
+            '--control-corpus', 'corpus/control/EN'],
+    'GR' : ['-H139', '-e30', '-M', 'gr',
+            '--control-corpus', 'corpus/control/GR'],
+    'SP' : ['-H139', '-e30', '-M', 'es',
+            '--control-corpus', 'corpus/control/SP'],
+    'DU' : ['-H99', '-e20', '-M', 'nl',
+            '--control-corpus', 'corpus/control/DU'],
+}
+
+CMD = ['./train-net', '-n', 'pan', '--batch-size=40',
+       '-l1e-1', '-L-1', '--leakage-decay=0.9',
+       '-v', '--learning-method=4', '-d50', '--ignore-start=10',
+       '--presynaptic-noise=1.0', '--try-swapping-texts',
+       '--pan-output']
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--input-dir', help="find testing corpus here")
+    parser.add_argument('-o' '--output-dir', help="write results here")
+
+    args = parser.parse_args()
+
+    commands = []
+    for subdir in os.listdir(args.input_dir):
+        fulldir = os.path.join(args.input_dir, subdir)
+        if not os.path.isdir(fulldir):
+            continue
+        key = None
+        for x in os.listdir(fulldir):
+            if x[:2] in CONFIG and x[2:].isdigit():
+                key = X[:2]
+                break
+
+        cmd = CMD + CONFIG[key] + [fulldir]
+        commands.append(cmd)
+
+    output_file = open(os.path.join(args.output_dir, "answers.txt", "w"))
+    for cmd in commands:
+        suprocess.call(cmd, stdout=outputfile)
+
+    output_file.close()
+
+
+main()
