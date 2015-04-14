@@ -47,7 +47,6 @@ def get_net_and_corpus(srcdir, remap, accept_fn, control_corpus=None,
     if control_corpus:
         raw_control_texts = load_texts(control_corpus, remap,
                                        always, always)
-        print raw_control_texts.keys()
         raw_training_texts.update(raw_control_texts)
 
     alphabet = get_alphabet(raw_training_texts.values() +
@@ -91,7 +90,6 @@ def get_entropies_matrix(net, ignore_start, test_texts):
     lengths = []
     for name in net.class_names:
         if name not in test_texts:
-            print "skipping %s" % name
             continue
         cycle = test_texts.get(name)
         text = cycle.next()
@@ -232,11 +230,11 @@ def test(net, ignore_start, test_texts, ground_truth_oracle=no_answer):
                                        right)
     print C_NORMAL
 
+
 def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
           ignore_start, test_texts=None, ground_truth_oracle=no_answer):
 
     validation_text = texts.get('control', texts.values()[0]).next()
-
     prev_validation_entropies = net.test(validation_text, ignore_start, 1)
 
     for i in range(sub_epochs):
