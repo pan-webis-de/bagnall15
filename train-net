@@ -12,7 +12,7 @@ from language import load_texts, always, test_fn_search, training_fn_search
 import mappings
 import numpy as np
 
-from colour import RED, GREEN, YELLOW, C_NORMAL
+from colour import RED, GREEN, YELLOW, C_NORMAL, CYAN
 
 def get_ground_truth(srcdir):
     truth = {}
@@ -223,7 +223,6 @@ def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('srcdir', help="find training text here")
-    parser.add_argument('destdir', help="write results here")
     parser.add_argument('-n', '--basename',
                         help="base filenames upon this")
     parser.add_argument('-H', '--hidden-size', type=int, default=199, metavar='<nodes>',
