@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import argparse
 import os
 import sys
+HERE = os.path.dirname(__file__)
+sys.path.append(HERE)
+import argparse
 import charmodel
 import random
 import itertools
