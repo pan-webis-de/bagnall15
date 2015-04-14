@@ -9,6 +9,7 @@ import re
 import json
 from language import load_texts, always, test_fn_search, training_fn_search
 import mappings
+from colour import RED, GREEN, YELLOW, C_NORMAL
 
 def get_ground_truth(srcdir):
     truth = {}
