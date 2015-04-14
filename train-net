@@ -33,11 +33,19 @@ def encode_and_cycle_texts(alphabet, texts):
             for k, v in texts.items()}
 
 
-def get_net_and_corpus(srcdir, remap, accept_fn, **kwargs):
+def get_net_and_corpus(srcdir, remap, accept_fn, control_corpus=None,
+                       **kwargs):
     raw_training_texts = load_texts(srcdir, remap, accept_fn,
                                     training_fn_search)
     raw_test_texts = load_texts(srcdir, remap, accept_fn,
                                 test_fn_search)
+
+    if control_corpus:
+        raw_control_texts = load_texts(control_corpus, remap,
+                                       always, always)
+        print raw_control_texts.keys()
+        raw_training_texts.update(raw_control_texts)
+
     alphabet = get_alphabet(raw_training_texts.values() +
                             raw_test_texts.values())
     textnames = sorted(raw_training_texts.keys())
@@ -179,6 +187,7 @@ def main():
                         help="use this character mapping")
     parser.add_argument('-f', '--filename',
                         help="save net here")
+    parser.add_argument('--control-corpus', help="add extra documents from here")
     parser.add_argument('--try-swapping-texts', action='store_true',
                         help="if known text is short, train on unknown text")
 
@@ -217,6 +226,7 @@ def main():
 
     net, training_texts, test_texts = get_net_and_corpus(args.srcdir,
                                                          remap, accept_fn,
+                                                         args.control_corpus,
                                                          **net_kwargs)
     if args.try_swapping_texts:
         maybe_swap_texts(training_texts, test_texts)
