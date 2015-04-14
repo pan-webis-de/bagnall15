@@ -178,7 +178,9 @@ def test(net, ignore_start, test_texts, ground_truth_oracle=no_answer):
 def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
           ignore_start, test_texts=None, ground_truth_oracle=no_answer):
 
-    validation_texts = [(k, v.next()) for k, v in texts.items()[:5]]
+    validation_text = texts.get('control', texts.values()[0]).next()
+
+    prev_validation_entropies = net.test(validation_text, ignore_start, 1)
 
     for i in range(sub_epochs):
         print ("doing sub-epoch %d with learn-rate %s, "
@@ -188,12 +190,28 @@ def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
             net.train(cycle.next(), name, leakage=leakage,
                       ignore_start=ignore_start)
 
-        for name, text in validation_texts:
-            entropies = net.test(text, ignore_start)
-            own_e, mean_e = (entropies[name],
-                             sum(entropies.values()) / len(entropies))
-            print ("%s own %.3f mean %.3f diff %.3f" %
-                   (name, own_e, mean_e, mean_e - own_e))
+        validation_entropies = net.test(validation_text, ignore_start, 1)
+        ve_sum = 0.0
+        ve_sum2 = 0.0
+        ve_diff_sum = 0.0
+        ve_diff_sum2 = 0.0
+        for prev, e in zip(prev_validation_entropies, validation_entropies):
+            diff = prev - e
+            ve_diff_sum += diff
+            ve_diff_sum2 += diff * diff
+            ve_sum += e
+            ve_sum2 += e * e
+        ve_scale = 1.0 / len(validation_entropies)
+        prev_validation_entropies = validation_entropies
+        ve_mean = ve_sum * ve_scale
+        ve_stddev = (ve_sum2 * ve_scale - ve_mean * ve_mean) ** 0.5
+        ve_diff_mean = ve_diff_sum * ve_scale
+        ve_diff_stddev = (ve_diff_sum2 * ve_scale -
+                          ve_diff_mean * ve_diff_mean) ** 0.5
+
+        print ("validation entropy %.3f±%.3f  diff % .3f±%.3f" %
+               (ve_mean, ve_stddev, ve_diff_mean, ve_diff_stddev))
+
         if test_texts:
             test(net, ignore_start, test_texts, ground_truth_oracle)
 
