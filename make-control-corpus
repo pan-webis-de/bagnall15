@@ -1,0 +1,63 @@
+#!/usr/bin/python
+
+import os, sys
+import re
+from glob import glob
+import random
+
+HERE = os.path.dirname(__file__)
+RAW_DIR = os.path.join(HERE, "corpus/control/raw")
+DEST_DIR = os.path.join(HERE, "corpus/control")
+
+TARGET_SIZE = 40000
+
+SETS = (
+    ('english', 'EN'),
+    ('dutch', 'DU'),
+    ('spanish', 'SP'),
+    ('greek', 'GR'),
+)
+
+def file_generator(d, base):
+    for i in xrange(10000):
+        yield open(os.path.join(d, "%s%04d.txt" % (base, i)), 'w')
+
+def make_control_corpus(dir_lang, file_lang):
+    src_dirs = []
+    for d in os.listdir(RAW_DIR):
+        if dir_lang in d:
+            src_dirs.append(os.path.join(RAW_DIR, d))
+
+    dest_dir = os.path.join(DEST_DIR, file_lang, 'control')
+    if not os.path.isdir(dest_dir):
+        os.makedirs(dest_dir)
+
+    f_next = file_generator(dest_dir, file_lang).next
+
+    destfile = f_next()
+    dest_size = 0
+    texts = set()
+    src_files = glob("%s/*%s*/*/*.txt" % (RAW_DIR, dir_lang))
+    for fn in src_files:
+        f = open(fn)
+        texts.add(f.read())
+        f.close()
+
+    print "%d sourcefiles, %d texts" % (len(src_files), len(texts))
+
+    for text in texts:
+        text_size = len(text)
+
+        new_size = dest_size + text_size
+        if abs(TARGET_SIZE - new_size) < abs(TARGET_SIZE - dest_size):
+            print >>destfile, text
+            dest_size = new_size
+        else:
+            destfile.close()
+            destfile = f_next()
+            print >>destfile, text
+            dest_size = text_size
+
+
+for dir_lang, file_lang in SETS:
+    make_control_corpus(dir_lang, file_lang)
