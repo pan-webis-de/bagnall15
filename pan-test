@@ -33,19 +33,15 @@ def main():
 
     commands = []
     for subdir in os.listdir(args.input_dir):
-        fulldir = os.path.join(args.input_dir, subdir)
-        if not os.path.isdir(fulldir):
+        if not os.path.isdir(os.path.join(args.input_dir, subdir)):
             continue
-        key = None
-        for x in os.listdir(fulldir):
-            if x[:2] in CONFIG and x[2:].isdigit():
-                key = x[:2]
-                break
-        else:
-            continue
-        cmd = CMD + CONFIG[key] + [fulldir]
-        commands.append(cmd)
+        if subdir[:2] in CONFIG and subdir[2:].isdigit():
+            key = subdir[:2]
+            break
 
+    cmd = CMD + CONFIG[key] + [args.input_dir]
+    commands.append(cmd)
+    print >> sys.stderr, "running %s" % (' '.join(cmd))
     output_file = open(os.path.join(args.output_dir, "answers.txt"), "w")
     for cmd in commands:
         subprocess.call(cmd, stdout=output_file)
