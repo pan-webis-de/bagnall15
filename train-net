@@ -17,6 +17,7 @@ def get_ground_truth(srcdir):
     f = open(os.path.join(srcdir, 'truth.txt'))
     for line in f:
         name, yn = line.strip().split()
+        name = re.sub(r'\W', '', name)  #damn \uFEFF on first line
         truth[name] = yn == 'Y'
     f.close()
     return truth
