@@ -7,19 +7,19 @@ import subprocess
 HERE = os.path.dirname(__file__)
 
 CONFIG = {
-    'EN' : ['-H119', '-e30', '-M', 'en',
+    'EN' : ['-H119', '-e30', '-M', 'en', '--pan-hedge=0.04',
             '--control-corpus', 'corpus/control/EN'],
-    'GR' : ['-H139', '-e30', '-M', 'gr',
+    'GR' : ['-H139', '-e30', '-M', 'gr', '--pan-hedge=0.04',
             '--control-corpus', 'corpus/control/GR'],
-    'SP' : ['-H139', '-e30', '-M', 'es',
+    'SP' : ['-H139', '-e30', '-M', 'es', '--pan-hedge=0.04',
             '--control-corpus', 'corpus/control/SP'],
-    'DU' : ['-H99', '-e20', '-M', 'nl',
+    'DU' : ['-H99', '-e20', '-M', 'nl', '--pan-hedge=0.07',
             '--control-corpus', 'corpus/control/DU'],
 }
 
 CMD = ['./train-net', '-n', 'pan', '--batch-size=40',
        '-l1e-1', '-L-1', '--leakage-decay=0.9',
-       '-v', '--learning-method=4', '-d50', '--ignore-start=10',
+       '--learning-method=4', '-d50', '--ignore-start=10',
        '--presynaptic-noise=1.0', '--try-swapping-texts',
        '--pan-output']
 
@@ -27,7 +27,7 @@ CMD = ['./train-net', '-n', 'pan', '--batch-size=40',
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input-dir', help="find testing corpus here")
-    parser.add_argument('-o' '--output-dir', help="write results here")
+    parser.add_argument('-o', '--output-dir', help="write results here")
 
     args = parser.parse_args()
 
@@ -39,15 +39,16 @@ def main():
         key = None
         for x in os.listdir(fulldir):
             if x[:2] in CONFIG and x[2:].isdigit():
-                key = X[:2]
+                key = x[:2]
                 break
-
+        else:
+            continue
         cmd = CMD + CONFIG[key] + [fulldir]
         commands.append(cmd)
 
-    output_file = open(os.path.join(args.output_dir, "answers.txt", "w"))
+    output_file = open(os.path.join(args.output_dir, "answers.txt"), "w")
     for cmd in commands:
-        suprocess.call(cmd, stdout=outputfile)
+        subprocess.call(cmd, stdout=output_file)
 
     output_file.close()
 
