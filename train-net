@@ -92,7 +92,8 @@ def get_entropies_matrix(net, ignore_start, test_texts):
     return np.array(py_entropies)
 
 
-def print_pan_results(net, ignore_start, test_texts, hedge=0.04):
+def write_pan_results(net, filename, ignore_start, test_texts,
+                      hedge=0.04, raw=False):
     entropies = get_entropies_matrix(net, ignore_start, test_texts)
     #rel_entropies = entropies - entropies.mean(axis=0)
     rel_entropies = entropies - np.median(entropies, axis=0)
@@ -139,9 +140,14 @@ def print_pan_results(net, ignore_start, test_texts, hedge=0.04):
             s = 0.49 - step * (x - cat1_bottom)
         score_map.append(s)
 
+    f = open(filename, 'w')
     for name, index in zip(net.class_names, indices):
-        print "%s %.3f" % (name, score_map[index])
-
+        if raw:
+            score = 1.0 - float(index) / net.n_classes
+        else:
+            score = score_map[index]
+        print >> f, "%s %.3f" % (name, score)
+    f.close()
 
 def no_answer(*args):
     pass
@@ -342,8 +348,10 @@ def main():
     parser.add_argument('--try-swapping-texts', action='store_true',
                         help="if known text is short, train on unknown text")
 
-    parser.add_argument('--pan-output', action='store_true',
-                        help="write answers in the style expected by PAN")
+    parser.add_argument('--pan-answers',
+                        help="write answers here in the style expected by PAN")
+    parser.add_argument('--raw-answers',
+                        help="write answers here not adjusted for c@1")
     parser.add_argument('--pan-hedge', type=float, default=0.04,
                         help="radius of undecided zone in pan output")
 
@@ -389,12 +397,16 @@ def main():
         maybe_swap_texts(training_texts, test_texts)
 
 
-    if args.pan_output:
+    if args.pan_answers:
         train_silently(net, training_texts, args.leakage,
                        args.sub_epochs, args.leakage_decay,
                        args.learn_rate_decay, args.ignore_start)
 
-        print_pan_results(net, args.ignore_start, test_texts, args.pan_hedge)
+        write_pan_results(net, args.pan_answers, args.ignore_start, test_texts,
+                          args.pan_hedge)
+        if args.raw_answers:
+            write_pan_results(net, args.raw_answers, args.ignore_start, test_texts,
+                              args.pan_hedge, raw=True)
 
     else:
         ground_truth_oracle = read_truth_file(args.srcdir).get

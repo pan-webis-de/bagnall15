@@ -6,47 +6,64 @@ import subprocess
 
 HERE = os.path.dirname(__file__)
 
+# XXX don't add extra lines - config needs to fit in 20 lines.
 CONFIG = {
-    'EN' : ['-H119', '-e30', '-M', 'en', '--pan-hedge=0.04',
-            '--control-corpus', 'corpus/control/EN'],
-    'GR' : ['-H139', '-e30', '-M', 'gr', '--pan-hedge=0.04',
-            '--control-corpus', 'corpus/control/GR'],
-    'SP' : ['-H139', '-e30', '-M', 'es', '--pan-hedge=0.04',
-            '--control-corpus', 'corpus/control/SP'],
-    'DU' : ['-H99', '-e20', '-M', 'nl', '--pan-hedge=0.07',
-            '--control-corpus', 'corpus/control/DU'],
+    'EN': ['-H119', '-e40', '-M', 'en',
+           '--presynaptic-noise=0.0',
+           '--control-corpus', 'corpus/control/EN'],
+    'GR': ['-H99', '-e40', '-M', 'gr',
+           '--presynaptic-noise=0.0',
+           #'--reverse',
+           '--control-corpus', 'corpus/control/GR'],
+    'SP': ['-H119', '-e40', '-M', 'es',
+           '--presynaptic-noise=0.0',
+           #'--reverse',
+           '--control-corpus', 'corpus/control/SP'],
+    'DU': ['-H119', '-e30', '-M', 'nl',
+           '--presynaptic-noise=0.0', '--concat-texts',
+           '--control-corpus', 'corpus/control/DU'],
 }
 
 CMD = ['./train-net', '-n', 'pan', '--batch-size=40',
-       '-l1e-1', '-L-1', '--leakage-decay=0.9',
-       '--learning-method=4', '-d50', '--ignore-start=10',
-       '--presynaptic-noise=1.0', '--try-swapping-texts',
-       '--pan-output']
+       '-l2e-1', '-L-5', '--leakage-decay=0.9',
+       #'--balanced-training',
+       #'--swap-corpora',
+       '--activation=2', '--pan-hedge=0.0',
+       '--learning-method=4', '-d70', '--ignore-start=10',
+       '--try-swapping-texts',
+       '-r8',
+       '--reverse',
+       '--concat-texts',
+       ]
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input-dir', help="find testing corpus here")
     parser.add_argument('-o', '--output-dir', help="write results here")
+    parser.add_argument('--raw-answers', action="store_true",
+                        help="also write results not adjusted for c@1")
 
     args = parser.parse_args()
 
-    commands = []
     for subdir in os.listdir(args.input_dir):
         if not os.path.isdir(os.path.join(args.input_dir, subdir)):
             continue
         if subdir[:2] in CONFIG and subdir[2:].isdigit():
             key = subdir[:2]
+            print >> sys.stderr, "using %s config" % key
             break
 
-    cmd = CMD + CONFIG[key] + [args.input_dir]
-    commands.append(cmd)
+    output_filename = os.path.join(args.output_dir, "answers.txt")
+
+    cmd = (CMD + CONFIG[key] + [args.input_dir] +
+           ['--pan-answers', output_filename])
+
+    if args.raw_answers:
+        raw_output_filename = os.path.join(args.output_dir, "raw-answers.txt")
+        cmd.extend(['--raw-answers', raw_output_filename])
+
     print >> sys.stderr, "running %s" % (' '.join(cmd))
-    output_file = open(os.path.join(args.output_dir, "answers.txt"), "w")
-    for cmd in commands:
-        subprocess.call(cmd, stdout=output_file)
-
-    output_file.close()
-
+    subprocess.call(cmd)
 
 main()

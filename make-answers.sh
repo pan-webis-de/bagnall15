@@ -11,5 +11,5 @@ fi
 
 for n in $languages; do
     mkdir -p $DEST/$n
-    time ./pan-test -i corpus/*$n* -o $DEST/$n 2>>$DEST/stderr-$n.log
+    time ./pan-test -i corpus/*$n* -o $DEST/$n --raw-answers  2>>$DEST/stderr-$n.log
  done
