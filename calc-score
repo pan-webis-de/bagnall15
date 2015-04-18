@@ -1,0 +1,147 @@
+#!/usr/bin/python
+import argparse
+import os
+import sys
+
+from language import read_truth_file, read_answers_file
+
+
+def get_roc_trail(answers, truth):
+    rmap = {}
+    for k, v in answers.items():
+        t = truth[k]
+        r = rmap.setdefault(v, [0, 0])
+        r[0] += t
+        r[1] += not t
+    return [(score, d[0], d[1])
+            for score, d in sorted(rmap.items())]
+
+
+def calc_roc_from_trail(roc_trail, n_true, n_false):
+    true_positives, false_positives = n_true, n_false
+    tp_scale = 1.0 / (n_true or 1)
+    fp_scale = 1.0 / (n_false or 1)
+    px, py = 1, 1  # previous position for area calculation
+    auc = 1.0
+
+    for score, positives, negatives in roc_trail:
+        false_positives -= negatives
+        true_positives -= positives
+        x = false_positives * fp_scale
+        y = true_positives * tp_scale
+        auc += (px + x) * 0.5 * (y - py)
+        px = x
+        py = y
+
+    auc += px * 0.5 * -py  # is this ever necesssary?
+    return auc
+
+
+def calc_auc(answers, truth):
+    results = get_roc_trail(answers, truth)
+    n_true = sum(truth.values())
+    n_false = len(truth) - n_true
+    return calc_roc_from_trail(results, n_true, n_false)
+
+
+def calc_cat1(answers, truth):
+    # (1/n)*(nc+(nu*nc/n))
+    n_correct = 0
+    n_undecided = 0
+    n = len(answers)
+    for k, v in answers.items():
+        if v == 0.5:
+            n_undecided += 1
+        else:
+            n_correct += (v > 0.5) == truth[k]
+
+    scale = 1.0 / n
+    return (n_correct + n_undecided * n_correct * scale) * scale
+
+
+def search(answers, truth):
+    roc_trail = get_roc_trail(answers, truth)
+    n_true = sum(truth.values())
+    n_false = len(truth) - n_true
+
+    base_auc = calc_roc_from_trail(roc_trail, n_true, n_false)
+
+    # at bottom end of scale
+    true_positives = n_true
+    true_negatives = 0
+    scale = 1.0 / len(truth)
+    candidates = []
+    best_cat1 = 0
+    best_i = 0
+    best_candidate = (0,)
+
+    def print_c(b):
+        print ("best: %.3f range (%d-%d) (%.3f - %.3f)"
+               " undecided %d correct %d" % b)
+
+    for i, roc_data in enumerate(roc_trail):
+        score, positives, negatives = roc_data
+        true_positives -= positives
+        n_undecided = positives + negatives
+        n_correct = true_positives + true_negatives
+        cat1 = (n_correct + n_undecided * n_correct * scale) * scale
+        candidate = (cat1, i, i, score, score, n_undecided, n_correct)
+        if candidate > best_candidate:
+            best_candidate = candidate
+            print_c(candidate)
+        true_negatives += negatives
+
+
+    cat1, i1, _, score1, _, n_undecided, n_correct = best_candidate
+    print "searching forward"
+    for i in range(i1 + 1, min(i1 + 10, len(roc_trail))):
+        score, positives, negatives = roc_trail[i]
+        n_undecided += positives + negatives
+        n_correct -= positives
+        cat1 = (n_correct + n_undecided * n_correct * scale) * scale
+        candidate = (cat1, i1, i, score1, score, n_undecided, n_correct)
+        candidates.append(candidate)
+        if candidate > best_candidate:
+            best_candidate = candidate
+            print_c(candidate)
+
+    cat1, i1, i2, score1, score2, n_undecided, n_correct = best_candidate
+    print "searching backward"
+    for i in range(i1 - 1, max(i1 - 10, 0)):
+        score, positives, negatives = roc_trail[i]
+        n_undecided += positives + negatives
+        n_correct -= negatives
+        cat1 = (n_correct + n_undecided * n_correct * scale) * scale
+        candidate = (cat1, i1, i2, score1, score2, n_undecided, n_correct)
+        candidates.append(candidate)
+        if candidate > best_candidate:
+            best_candidate = candidate
+            print_c(candidate)
+
+
+
+
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--answer-file', help="read scores from here")
+    parser.add_argument('-t', '--truth-file', help="find ground truth here")
+    parser.add_argument('-s', '--search', action="store_true",
+                        help="search for good c@1 settings.")
+
+    args = parser.parse_args()
+
+    answers = read_answers_file(args.answer_file)
+    truth = read_truth_file(args.truth_file)
+
+    auc = calc_auc(answers, truth)
+    cat1 = calc_cat1(answers, truth)
+
+    score = auc * cat1
+    print "AUC %.3f c@1 %.3f product %.3f" % (auc, cat1, score)
+
+    if args.search:
+        search(answers, truth)
+
+main()
