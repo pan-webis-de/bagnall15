@@ -25,7 +25,7 @@ pgm-clean:
 pyc-clean:
 	rm -f *.pyc mappings/*.pyc
 
-.PHONY: all pgm-clean all-mappings
+.PHONY: all pgm-clean all-mappings answers-rev
 
 .SECONDARY: recur recur/local.mak
 
@@ -42,3 +42,6 @@ mappings/gr.py:
 	./corpus-utils -m $(GR_CORPUS) -d --decompose-caps --collapse-latin > $@
 
 all-mappings: mappings/gr.py mappings/en.py  mappings/es.py mappings/nl.py
+
+answers-rev:
+	make-answers.sh
