@@ -88,10 +88,9 @@ def search(answers, truth):
         candidate = (cat1, i, i, score, score, n_undecided, n_correct)
         if candidate > best_candidate:
             best_candidate = candidate
-            print_c(candidate)
         true_negatives += negatives
 
-
+    print_c(best_candidate)
     cat1, i1, _, score1, _, n_undecided, n_correct = best_candidate
     print "searching forward"
     for i in range(i1 + 1, min(i1 + 10, len(roc_trail))):
