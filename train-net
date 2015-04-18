@@ -11,20 +11,11 @@ import itertools
 import re
 import json
 from language import load_texts, always, test_fn_search, training_fn_search
+from language import read_truth_file
 import mappings
 import numpy as np
 
 from colour import RED, GREEN, YELLOW, C_NORMAL, CYAN
-
-def get_ground_truth(srcdir):
-    truth = {}
-    f = open(os.path.join(srcdir, 'truth.txt'))
-    for line in f:
-        name, yn = line.strip().split()
-        name = re.sub(r'\W', '', name)  #damn \uFEFF on first line
-        truth[name] = yn == 'Y'
-    f.close()
-    return truth
 
 def get_alphabet(texts):
     text = ''.join(''.join(x) for x in texts)
@@ -406,7 +397,7 @@ def main():
         print_pan_results(net, args.ignore_start, test_texts, args.pan_hedge)
 
     else:
-        ground_truth_oracle = get_ground_truth(args.srcdir).get
+        ground_truth_oracle = read_truth_file(args.srcdir).get
 
         train(net, training_texts, args.leakage, args.sub_epochs,
               args.leakage_decay, args.learn_rate_decay, args.ignore_start,
