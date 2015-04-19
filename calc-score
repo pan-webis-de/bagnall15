@@ -59,25 +59,42 @@ def calc_cat1(answers, truth):
     return (n_correct + n_undecided * n_correct * scale) * scale
 
 
+def print_c(b):
+    print ("best: auc*cat1 %.4f %.3f auc %.3f range (%d-%d) (%.3f - %.3f)"
+           " undecided %d correct %d" % b)
+
+
+def snipped_roc(orig_trail, a, b, n_true, n_false):
+    head = orig_trail[:a]
+    middle = orig_trail[a:b]
+    target = orig_trail[b]
+    tail = orig_trail[b + 1:]
+    score, positives, negatives = target
+    for _, p, n in middle:
+        positives += p
+        negatives += n
+    proxy = [(score, positives, negatives)]
+    return calc_roc_from_trail(head + proxy + tail, n_true, n_false)
+
+
+
+
 def search(answers, truth):
     roc_trail = get_roc_trail(answers, truth)
     n_true = sum(truth.values())
     n_false = len(truth) - n_true
 
-    base_auc = calc_roc_from_trail(roc_trail, n_true, n_false)
+    auc = calc_roc_from_trail(roc_trail, n_true, n_false)
 
     # at bottom end of scale
     true_positives = n_true
     true_negatives = 0
     scale = 1.0 / len(truth)
     candidates = []
+    good_candidates = []
     best_cat1 = 0
     best_i = 0
     best_candidate = (0,)
-
-    def print_c(b):
-        print ("best: %.3f range (%d-%d) (%.3f - %.3f)"
-               " undecided %d correct %d" % b)
 
     for i, roc_data in enumerate(roc_trail):
         score, positives, negatives = roc_data
@@ -85,33 +102,39 @@ def search(answers, truth):
         n_undecided = positives + negatives
         n_correct = true_positives + true_negatives
         cat1 = (n_correct + n_undecided * n_correct * scale) * scale
-        candidate = (cat1, i, i, score, score, n_undecided, n_correct)
+        candidate = (cat1 * auc, cat1, auc, i, i, score, score,
+                     n_undecided, n_correct)
         if candidate > best_candidate:
             best_candidate = candidate
         true_negatives += negatives
 
     print_c(best_candidate)
-    cat1, i1, _, score1, _, n_undecided, n_correct = best_candidate
+
+    _, _, _, i1, _, score1, _, n_undecided, n_correct = best_candidate
     print "searching forward"
     for i in range(i1 + 1, min(i1 + 10, len(roc_trail))):
         score, positives, negatives = roc_trail[i]
         n_undecided += positives + negatives
         n_correct -= positives
+        auc = snipped_roc(roc_trail, i1, i, n_true, n_false)
         cat1 = (n_correct + n_undecided * n_correct * scale) * scale
-        candidate = (cat1, i1, i, score1, score, n_undecided, n_correct)
+        candidate = (cat1 * auc, cat1, auc, i1, i, score1, score,
+                     n_undecided, n_correct)
         candidates.append(candidate)
         if candidate > best_candidate:
             best_candidate = candidate
             print_c(candidate)
 
-    cat1, i1, i2, score1, score2, n_undecided, n_correct = best_candidate
+    _, _, _, i1, i2, _, score2, n_undecided, n_correct = best_candidate
     print "searching backward"
     for i in range(i1 - 1, max(i1 - 10, 0)):
         score, positives, negatives = roc_trail[i]
         n_undecided += positives + negatives
         n_correct -= negatives
+        auc = snipped_roc(roc_trail, i, i2, n_true, n_false)
         cat1 = (n_correct + n_undecided * n_correct * scale) * scale
-        candidate = (cat1, i1, i2, score1, score2, n_undecided, n_correct)
+        candidate = (cat1 * auc, cat1, auc, i, i2, score, score2,
+                     n_undecided, n_correct)
         candidates.append(candidate)
         if candidate > best_candidate:
             best_candidate = candidate
