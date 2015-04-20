@@ -1,0 +1,31 @@
+#!/usr/bin/python
+import argparse
+import os
+import sys
+
+from language import read_answers_file
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('srcfiles', nargs='+', help="read scores from here")
+    parser.add_argument('-o', '--output-file', help="write combined scores here")
+    args = parser.parse_args()
+
+    #print vars(args), args, dir(args)
+    answers = {}
+    for fn in args.srcfiles:
+        d = read_answers_file(fn)
+        for k, v in d.items():
+            x = answers.get(k, 0.0)
+            x += v
+            answers[k] = x
+
+    outdir = os.path.dirname(args.output_file)
+    if not os.path.isdir(outdir):
+        os.makedirs(outdir)
+    f = open(args.output_file, 'w')
+    for k, v in answers.items():
+        print >> f, "%s %.3f" % (k, v / len(args.srcfiles))
+    f.close()
+
+main()
