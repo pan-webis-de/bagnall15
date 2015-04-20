@@ -2,6 +2,7 @@
 
 export DEST=answers-$(git rev-parse --short HEAD)
 
+echo "writing to $DEST"
 
 if [[ "$1" ]]; then
     languages="$1"
