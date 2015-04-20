@@ -120,8 +120,9 @@ def search(answers, truth):
 
     _, _, _, centre, _, score1, _, n_undecided, n_correct = best_candidate
     print "searching around"
-    for s in range(centre - 16, centre + 16):
-        for e in range(s, centre + 16):
+    for s in range(max(centre - 16, 0),
+                   min(centre + 16, len(roc_trail))):
+        for e in range(s, min(centre + 16, len(roc_trail))):
             head, middle, tail, score_s, score_e = split_roc_trail(roc_trail, s, e)
             auc = calc_roc_from_trail(head + middle + tail, n_true, n_false)
             score, u_pos, u_neg = middle[0]
