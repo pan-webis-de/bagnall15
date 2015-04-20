@@ -2,6 +2,7 @@
 import argparse
 import os
 import sys
+import colour
 
 from language import read_truth_file, read_answers_file
 
@@ -59,9 +60,9 @@ def calc_cat1(answers, truth):
     return (n_correct + n_undecided * n_correct * scale) * scale
 
 
-def print_c(b):
-    print ("best: auc*cat1 %.4f %.3f auc %.3f range (%d-%d) (%.3f - %.3f)"
-           " undecided %d correct %d" % b)
+def print_c(b, prefix='best'):
+    print ("%6s auc*cat1 %.4f; cat1 %.3f; auc %.3f; range (%d-%d) (%.3f - %.3f)"
+           " undecided %d; correct %d" % ((prefix,) + b) + colour.C_NORMAL)
 
 
 def split_roc_trail(orig_trail, s, e):
@@ -88,6 +89,8 @@ def search(answers, truth):
     n_false = len(truth) - n_true
 
     auc = calc_roc_from_trail(roc_trail, n_true, n_false)
+    default_cat1 = calc_cat1(answers, truth)
+    default_score = auc * default_cat1
 
     # at bottom end of scale
     true_positives = n_true
@@ -117,8 +120,8 @@ def search(answers, truth):
 
     _, _, _, centre, _, score1, _, n_undecided, n_correct = best_candidate
     print "searching around"
-    for s in range(centre - 13, centre + 13):
-        for e in range(s, centre + 11):
+    for s in range(centre - 16, centre + 16):
+        for e in range(s, centre + 16):
             head, middle, tail, score_s, score_e = split_roc_trail(roc_trail, s, e)
             auc = calc_roc_from_trail(head + middle + tail, n_true, n_false)
             score, u_pos, u_neg = middle[0]
@@ -131,7 +134,15 @@ def search(answers, truth):
             if candidate > best_candidate:
                 best_candidate = candidate
                 print_c(candidate)
-
+            elif (s, e) in ((30, 35), (35, 40), (25, 35),
+                            (35, 45), (30, 40), (35, 35)):
+                if candidate > centre_candidate:
+                    c = colour.GREEN
+                elif candidate[0] > default_score:
+                    c = colour.YELLOW
+                else:
+                    c = colour.RED
+                print_c(candidate, prefix='%s%s-%s' % (c, s, e))
 
 
 
