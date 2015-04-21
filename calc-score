@@ -60,9 +60,9 @@ def calc_cat1(answers, truth):
     return (n_correct + n_undecided * n_correct * scale) * scale
 
 
-def print_c(b, prefix='best'):
-    print ("%6s auc*cat1 %.4f; cat1 %.3f; auc %.3f; range (%d-%d) (%.3f - %.3f)"
-           " undecided %d; correct %d" % ((prefix,) + b) + colour.C_NORMAL)
+def print_c(b, c='', prefix='best'):
+    print ("%s%8s auc*cat1 %.4f; cat1 %.3f; auc %.3f; range (%d-%d) (%.3f - %.3f)"
+           " undecided %d; correct %d tp %d tf %d" % ((c, prefix,) + b) + colour.C_NORMAL)
 
 
 def split_roc_trail(orig_trail, s, e):
@@ -109,7 +109,7 @@ def search(answers, truth):
         n_correct = true_positives + true_negatives
         cat1 = (n_correct + n_undecided * n_correct * scale) * scale
         candidate = (cat1 * auc, cat1, auc, i, i, score, score,
-                     n_undecided, n_correct)
+                     n_undecided, n_correct, true_positives, true_negatives)
         if candidate > best_candidate:
             best_candidate = candidate
         true_negatives += negatives
@@ -118,8 +118,20 @@ def search(answers, truth):
     centre_candidate = best_candidate
 
 
-    _, _, _, centre, _, score1, _, n_undecided, n_correct = best_candidate
+    centre = best_candidate[3]
     print "searching around"
+
+    index_keys = (0.5, 0.6, 0.67, 0.7)
+    indices = {k: 0 for k in index_keys}
+    for i, x in enumerate(roc_trail):
+        score, u_pos, u_neg = x
+        for k, v in indices.items():
+            if score <= k:
+                indices[k] = i
+
+    print indices
+    rindices = {v:k for k, v in indices.items()}
+
     for s in range(max(centre - 16, 0),
                    min(centre + 16, len(roc_trail))):
         for e in range(s, min(centre + 16, len(roc_trail))):
@@ -127,23 +139,24 @@ def search(answers, truth):
             auc = calc_roc_from_trail(head + middle + tail, n_true, n_false)
             score, u_pos, u_neg = middle[0]
             n_undecided = u_pos + u_neg
-            n_correct = sum(x[2] for x in head) + sum(x[1] for x in tail)
+            n_tp = sum(x[1] for x in tail)
+            n_tf = sum(x[2] for x in head)
+            n_correct = n_tp + n_tf
             cat1 = (n_correct + n_undecided * n_correct * scale) * scale
             candidate = (cat1 * auc, cat1, auc, s, e, score_s, score_e,
-                         n_undecided, n_correct)
+                         n_undecided, n_correct, n_tp, n_tf)
             candidates.append(candidate)
             if candidate > best_candidate:
                 best_candidate = candidate
                 print_c(candidate)
-            elif (s, e) in ((30, 35), (35, 40), (25, 35),
-                            (35, 45), (30, 40), (35, 35)):
+            elif s in rindices and e in rindices:
                 if candidate > centre_candidate:
                     c = colour.GREEN
                 elif candidate[0] > default_score:
                     c = colour.YELLOW
                 else:
                     c = colour.RED
-                print_c(candidate, prefix='%s%s-%s' % (c, s, e))
+                print_c(candidate, c, prefix='%2s-%2s' % (rindices[s], rindices[e]))
 
 
 
