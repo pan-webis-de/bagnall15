@@ -3,6 +3,8 @@ import argparse
 import os
 import sys
 import colour
+import glob
+from collections import defaultdict
 
 from language import read_truth_file, read_answers_file
 
@@ -60,9 +62,12 @@ def calc_cat1(answers, truth):
     return (n_correct + n_undecided * n_correct * scale) * scale
 
 
-def print_c(b, c='', prefix='best'):
-    print ("%s%9s auc*cat1 %.4f; cat1 %.3f; auc %.3f; range (%d-%d) (%.3f - %.3f)"
-           " undecided %d; correct %d tp %d tf %d" % ((c, prefix,) + b) + colour.C_NORMAL)
+def print_candidate(b, c='', prefix='best', fn=''):
+    if fn:
+        fn = "%20s" %fn
+    print ("%s%9s %s auc*cat1 %.4f; cat1 %.3f; auc %.3f; range (%d-%d) "
+           "(%.3f - %.3f) undecided %2d; correct %2d tp %2d tf %2d" %
+           ((c, prefix, fn) + b) + colour.C_NORMAL)
 
 
 def split_roc_trail(orig_trail, s, e):
@@ -83,10 +88,24 @@ def split_roc_trail(orig_trail, s, e):
     return head, [(score, positives, negatives)], tail, score_s, score_e
 
 
-def search(answers, truth):
+def search(answers, truth, verbose=False):
     roc_trail = get_roc_trail(answers, truth)
     n_true = sum(truth.values())
     n_false = len(truth) - n_true
+
+    index_keys = (0.45, 0.5, 0.6, 0.65, 0.7, 0.75)
+    indices = {k: 0 for k in index_keys}
+    for i, x in enumerate(roc_trail):
+        score, u_pos, u_neg = x
+        for k, v in indices.items():
+            if score <= k:
+                indices[k] = i
+
+    if verbose:
+        print "searching around"
+        print indices
+    rindices = {v: k for k, v in indices.items()}
+
 
     auc = calc_roc_from_trail(roc_trail, n_true, n_false)
     default_cat1 = calc_cat1(answers, truth)
@@ -97,10 +116,14 @@ def search(answers, truth):
     true_negatives = 0
     scale = 1.0 / len(truth)
     candidates = []
-    good_candidates = []
-    best_cat1 = 0
-    best_i = 0
     best_candidate = (0,)
+    indicators = {}
+
+    if verbose:
+        print_c = print_candidate
+    else:
+        def print_c(*args, **kwargs):
+            pass
 
     for i, roc_data in enumerate(roc_trail):
         score, positives, negatives = roc_data
@@ -115,26 +138,13 @@ def search(answers, truth):
         true_negatives += negatives
 
     print_c(best_candidate)
-    centre_candidate = best_candidate
-
-
+    indicators['centre'] = best_candidate
     centre = best_candidate[3]
-    print "searching around"
 
-    index_keys = (0.45, 0.5, 0.6, 0.65, 0.7, 0.75)
-    indices = {k: 0 for k in index_keys}
-    for i, x in enumerate(roc_trail):
-        score, u_pos, u_neg = x
-        for k, v in indices.items():
-            if score <= k:
-                indices[k] = i
 
-    print indices
-    rindices = {v:k for k, v in indices.items()}
-
-    for s in range(max(centre - 16, 0),
-                   min(centre + 16, len(roc_trail))):
-        for e in range(s, min(centre + 16, len(roc_trail))):
+    for s in range(max(centre - 20, 0),
+                   min(centre + 20, len(roc_trail))):
+        for e in range(s, min(centre + 20, len(roc_trail))):
             head, middle, tail, score_s, score_e = split_roc_trail(roc_trail, s, e)
             auc = calc_roc_from_trail(head + middle + tail, n_true, n_false)
             score, u_pos, u_neg = middle[0]
@@ -149,38 +159,101 @@ def search(answers, truth):
             if candidate > best_candidate:
                 best_candidate = candidate
                 print_c(candidate)
-            elif s in rindices and e in rindices:
-                if candidate > centre_candidate:
+                indicators['range'] = candidate
+            if s in rindices and e in rindices:
+                if candidate > indicators['centre']:
                     c = colour.GREEN
                 elif candidate[0] > default_score:
                     c = colour.YELLOW
                 else:
                     c = colour.RED
-                print_c(candidate, c, prefix='%2s-%2s' % (rindices[s], rindices[e]))
+                if s != e:
+                    name = '%d-%d' % (rindices[s] * 100, rindices[e] * 100)
+                else:
+                    name = '%d' % (rindices[s] * 100,)
+                print_c(candidate, c, prefix=name)
+                indicators[name] = candidate
+
+    return indicators
+
+def search_answer_files(file_pattern, truth):
+    results = defaultdict(list)
+    for fn in glob.glob(file_pattern):
+        answers = read_answers_file(fn)
+        indicators = search(answers, truth)
+        for k, v in indicators.items():
+            results[k].append((v, fn))
+
+    winners = []
+    for k, v in sorted(results.items()):
+        v.sort()
+        v.reverse()
+        winners.append((v[0][0], v[0][1], k))
+
+    best = max(c[0] for c, n, k in winners if not k.isalpha())
+    near = best * 0.99
+    for candidate, name, key in winners:
+        if key.isalpha():
+            c = colour.CYAN
+        elif candidate[0] == best:
+            c = colour.YELLOW
+        elif candidate[0] > near:
+            c = colour.MAGENTA
+        else:
+            c = ''
+        print_candidate(candidate, c, prefix=key, fn=name)
 
 
 
 
+
+def search_one(answers, truth, verbose=False):
+    indicators = search(answers, truth, verbose=verbose)
+    best = max(v[0] for k, v in indicators.items() if not k.isalpha())
+    near = best * 0.99
+    for k, v in sorted(indicators.items()):
+        if k.isalpha():
+            c = colour.CYAN
+        elif v[0] == best:
+            c = colour.YELLOW
+        elif v[0] > near:
+            c = colour.MAGENTA
+        else:
+            c = ''
+        print_candidate(v, c, prefix=k)
+    return indicators
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--answer-file', help="read scores from here")
     parser.add_argument('-t', '--truth-file', help="find ground truth here")
+    parser.add_argument('-p', '--answer-file-pattern',
+                        help="read scores from files matching this glob pattern")
     parser.add_argument('-s', '--search', action="store_true",
                         help="search for good c@1 settings.")
+    parser.add_argument('-v', '--verbose', action="store_true",
+                        help="print more")
 
     args = parser.parse_args()
+    truth = read_truth_file(args.truth_file)
+
+    if args.answer_file_pattern:
+        search_answer_files(args.answer_file_pattern, truth=truth)
+        sys.exit()
 
     answers = read_answers_file(args.answer_file)
-    truth = read_truth_file(args.truth_file)
 
     auc = calc_auc(answers, truth)
     cat1 = calc_cat1(answers, truth)
 
     score = auc * cat1
-    print "AUC %.3f c@1 %.3f product %.3f" % (auc, cat1, score)
+    if args.verbose:
+        print "AUC %.3f c@1 %.3f product %.3f" % (auc, cat1, score)
 
     if args.search:
-        search(answers, truth)
+        search_one(answers, truth)
+
+
+
 
 main()
