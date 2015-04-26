@@ -232,6 +232,11 @@ def search_answer_files(file_pattern, truth):
                                      colour.C_NORMAL),
         print
 
+    for score, name in top_scores[:5]:
+        print "%s%s%s" % (colour_map.get(name, ''), name,
+                               colour.C_NORMAL),
+    print
+
 
 def search_one(answers, truth, verbose=False):
     indicators = search(answers, truth, verbose=verbose)
