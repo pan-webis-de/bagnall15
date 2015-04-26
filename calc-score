@@ -5,7 +5,7 @@ import sys
 import colour
 import glob
 from collections import defaultdict
-
+import re
 from language import read_truth_file, read_answers_file
 
 
@@ -181,8 +181,13 @@ def search_answer_files(file_pattern, truth):
     for fn in glob.glob(file_pattern):
         answers = read_answers_file(fn)
         indicators = search(answers, truth)
+        m = re.search(r'answers-([^/]+)/', fn)
+        if m:
+            shortname = m.group(1)
+        else:
+            shortname = fn
         for k, v in indicators.items():
-            results[k].append((v, fn))
+            results[k].append((v, shortname))
 
     winners = []
     for k, v in sorted(results.items()):
