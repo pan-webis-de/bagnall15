@@ -28,7 +28,7 @@ def generate_spectrum(starts, step=6, n=6):
     return spectrum
 
 spectra = {k: generate_spectrum(x) for k, x
-           in (('warm', (160, 196)),
-                ('darkwarm', (88, 124)),
-                ('bluegreen', (17, 53)),
+           in (('warm', (160, 196, 21, 57)),
+               ('darkwarm', (88, 124)),
+               ('bluegreen', (17, 53)),
            )}
