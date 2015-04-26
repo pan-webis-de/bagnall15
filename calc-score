@@ -208,8 +208,29 @@ def search_answer_files(file_pattern, truth):
             c = ''
         print_candidate(candidate, c, prefix=key, fn=name)
 
+    totals = defaultdict(float)
+    for x in results.values():
+        for candidate, fn in x:
+            #print 'candidate is ', candidate
+            totals[fn] += candidate[0]
 
+    top_scores = sorted((v / len(results), k) for k, v in totals.items())
+    top_scores.reverse()
 
+    print colour.spectra['warm']
+    colour_map = {t[1]: c for c, t
+                  in zip(colour.spectra['warm'], top_scores)}
+
+    for score, name in top_scores:
+        print "%s%s %.3f%s" % (colour_map.get(name, ''), name, score,
+                               colour.C_NORMAL),
+    print
+    for k, v in sorted(results.items()):
+        print "%8s" % k,
+        for candidate, fn in v[:10]:
+            print "%s%s %.3f%s" % (colour_map.get(fn, ''), fn, candidate[0],
+                                     colour.C_NORMAL),
+        print
 
 
 def search_one(answers, truth, verbose=False):
