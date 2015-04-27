@@ -11,6 +11,7 @@ else
 fi
 
 for n in $languages; do
+    echo $n
     mkdir -p $DEST/$n
     time ./pan-test -i corpus/*$n* -o $DEST/$n --raw-answers  2>>$DEST/stderr-$n.log
  done
