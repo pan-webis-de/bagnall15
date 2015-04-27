@@ -225,14 +225,16 @@ def search_answer_files(file_pattern, truth):
         print "%s%s %.3f%s" % (colour_map.get(name, ''), name, score,
                                colour.C_NORMAL),
     print
+    notable_commits = set(x[1] for x in top_scores[:5])
     for k, v in sorted(results.items()):
         print "%8s" % k,
+        notable_commits.add(v[0][1])
         for candidate, fn in v[:10]:
             print "%s%s %.3f%s" % (colour_map.get(fn, ''), fn, candidate[0],
                                      colour.C_NORMAL),
         print
 
-    for score, name in top_scores[:5]:
+    for name in notable_commits:
         print "%s%s%s" % (colour_map.get(name, ''), name,
                                colour.C_NORMAL),
     print
