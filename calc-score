@@ -176,7 +176,7 @@ def search(answers, truth, verbose=False):
 
     return indicators
 
-def search_answer_files(file_pattern, truth):
+def _get_results(file_pattern, truth):
     results = defaultdict(list)
     for fn in glob.glob(file_pattern):
         answers = read_answers_file(fn)
@@ -188,13 +188,34 @@ def search_answer_files(file_pattern, truth):
             shortname = fn
         for k, v in indicators.items():
             results[k].append((v, shortname))
+    return results
 
+def _find_winners(results):
     winners = []
     for k, v in sorted(results.items()):
         v.sort()
         v.reverse()
         winners.append((v[0][0], v[0][1], k))
+    return winners
 
+def _get_sorted_scores(results):
+    totals = {}
+    for x in results.values():
+        for candidate, fn in x:
+            #print 'candidate is ', candidate
+            t = totals.setdefault(fn, [0.0, 0])
+            t[0] += candidate[0]
+            t[1] += 1
+
+    top_scores = sorted((v[0] / v[1], k) for k, v in totals.items())
+    top_scores.reverse()
+    return top_scores
+
+
+def search_answer_files(file_pattern, truth):
+    results = _get_results(file_pattern, truth)
+
+    winners = _find_winners(results)
     best = max(c[0] for c, n, k in winners if not k.isalpha())
     near = best * 0.99
     for candidate, name, key in winners:
@@ -208,16 +229,8 @@ def search_answer_files(file_pattern, truth):
             c = ''
         print_candidate(candidate, c, prefix=key, fn=name)
 
-    totals = defaultdict(float)
-    for x in results.values():
-        for candidate, fn in x:
-            #print 'candidate is ', candidate
-            totals[fn] += candidate[0]
+    top_scores = _get_sorted_scores(results)
 
-    top_scores = sorted((v / len(results), k) for k, v in totals.items())
-    top_scores.reverse()
-
-    print colour.spectra['warm']
     colour_map = {t[1]: c for c, t
                   in zip(colour.spectra['warm'], top_scores)}
 
@@ -238,6 +251,16 @@ def search_answer_files(file_pattern, truth):
         print "%s%s%s" % (colour_map.get(name, ''), name,
                                colour.C_NORMAL),
     print
+
+
+def search_commits(file_pattern, truth):
+    results = _get_results(file_pattern, truth)
+    top_scores = _get_sorted_scores(results)
+    notable_commits = set(x[1] for x in top_scores[:6])
+    for v in results.values():
+        notable_commits.add(v[0][1])
+    for name in notable_commits:
+        print name
 
 
 def search_one(answers, truth, verbose=False):
@@ -264,6 +287,8 @@ def main():
                         help="read scores from files matching this glob pattern")
     parser.add_argument('-s', '--search', action="store_true",
                         help="search for good c@1 settings.")
+    parser.add_argument('-S', '--search-commits-only', action="store_true",
+                        help="print good commit IDs")
     parser.add_argument('-v', '--verbose', action="store_true",
                         help="print more")
 
@@ -271,7 +296,10 @@ def main():
     truth = read_truth_file(args.truth_file)
 
     if args.answer_file_pattern:
-        search_answer_files(args.answer_file_pattern, truth=truth)
+        if args.search_commits_only:
+            search_commits(args.answer_file_pattern, truth=truth)
+        else:
+            search_answer_files(args.answer_file_pattern, truth=truth)
         sys.exit()
 
     answers = read_answers_file(args.answer_file)

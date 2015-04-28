@@ -1,0 +1,68 @@
+#!/usr/bin/python
+import sys
+from collections import Counter
+import subprocess
+
+#entirely unsafe!
+def parse_config_snippets(fn, lang_code, out=sys.stdout):
+    f = open(fn)
+    config = {}
+    state = 'expecting commit id or space'
+    python_lines = []
+    for line in f:
+        if state == 'expecting commit id or space':
+            line = line.strip()
+            if not line:
+                continue
+            if len(line) != 7:
+                raise ValueError("%s, got %r" % (state, line))
+            commit = line
+            state = 'expecting python lines'
+            countdown = 21
+        elif state == 'expecting python lines':
+            python_lines.append(line)
+            countdown -= 1
+            if countdown == 0:
+                state = 'expecting space'
+        elif state == 'expecting space':
+            if line.strip():
+                raise ValueError("%s, got %s" % (state, line))
+            exec ''.join(python_lines)
+            config[commit] = CMD + CONFIG[lang_code]
+            state = 'expecting commit id or space'
+        else:
+            raise RuntimeError("somehow we got in state %s" % state)
+
+    for k, v in config.items():
+        v2 = v[3:-2]
+        m = v2.index('-M')
+        del v2[m:m+2]
+        for x in ('-r8', '--pan-hedge=0.0', '--try-swapping-texts',
+                  '--activation=2', '--learning-method=4',
+                  '--ignore-start=10', '--batch-size=40'):
+            if x in v2:
+                v2.remove(x)
+        print >>out, k, ' '.join(v2)
+
+
+
+def main(args):
+    LANG_CONFIG = [
+        ('spanish', 'SP'),
+        ('english', 'EN'),
+        ('greek', 'GR'),
+        ('dutch', 'DU'),
+    ]
+    for lang, code in LANG_CONFIG:
+        if args and lang not in args:
+            continue
+        print lang
+        fn = "%s-best.txt" % lang
+        outfn = "%s-config.txt" % lang
+        subprocess.check_call(["./pick-out-good-config.sh",
+                               lang, fn])
+
+        f = open(outfn, 'w')
+        parse_config_snippets(fn, code, f)
+        f.close()
+main(sys.argv[1:])
