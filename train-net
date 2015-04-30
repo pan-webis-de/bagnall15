@@ -38,10 +38,14 @@ def encode_and_cycle_texts(alphabet, texts, reverse=False):
 
 
 def get_net_and_corpus(srcdir, remap, accept_fn, control_corpus=None,
-                       reverse=False,
+                       reverse=False, concat_texts=False,
                        **kwargs):
     raw_training_texts = load_texts(srcdir, remap, accept_fn,
                                     training_fn_search)
+    if concat_texts:
+        for v in raw_training_texts.values():
+            v[:] = ['\n'.join(v)]
+
     raw_test_texts = load_texts(srcdir, remap, accept_fn,
                                 test_fn_search)
 
@@ -358,7 +362,8 @@ def main():
                         help="if known text is short, train on unknown text")
     parser.add_argument('--reverse', action='store_true',
                         help="learn and process all texts in reverse")
-
+    parser.add_argument('--concat-texts', action='store_true',
+                        help="treat training documents as one big document")
     parser.add_argument('--pan-answers',
                         help="write answers here in the style expected by PAN")
     parser.add_argument('--raw-answers',
@@ -404,6 +409,7 @@ def main():
                                                          remap, accept_fn,
                                                          args.control_corpus,
                                                          args.reverse,
+                                                         args.concat_texts,
                                                          **net_kwargs)
     if args.try_swapping_texts:
         maybe_swap_texts(training_texts, test_texts)
