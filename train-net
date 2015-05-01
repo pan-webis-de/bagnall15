@@ -297,6 +297,34 @@ def train_silently(net, texts, leakage, sub_epochs, leakage_decay,
         leakage *= leakage_decay
         net.learn_rate *= learn_rate_decay
 
+def train_silently_balanced(net, texts, leakage, sub_epochs, leakage_decay,
+                            learn_rate_decay, ignore_start):
+    from heapq import heapify, heappop, heappush
+
+    training_counts = [(0, name, cycle) for name, cycle in texts.items()]
+    n_classes = len(training_counts)
+
+    for i in range(sub_epochs):
+        epoch_len = 0
+        epoch_texts = 0
+        visited_classes = set()
+        while len(visited_classes) < n_classes:
+            n, name, cycle = heappop(training_counts)
+            visited_classes.add(name)
+            print >> sys.stderr, "popped %s, trained on %d" % (name, n)
+            text = cycle.next()
+            train_len = max(len(text) - ignore_start, 0)
+            n += train_len
+            epoch_len += train_len
+            net.train(cycle.next(), name, leakage=leakage,
+                      ignore_start=ignore_start)
+            heappush(training_counts, (n, name, cycle))
+            epoch_texts += 1
+        print >> sys.stderr, ("EPOCH %d trained on %d chars in %d texts" %
+                              (i, epoch_len, epoch_texts))
+        leakage *= leakage_decay
+        net.learn_rate *= learn_rate_decay
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -364,6 +392,9 @@ def main():
                         help="learn and process all texts in reverse")
     parser.add_argument('--concat-texts', action='store_true',
                         help="treat training documents as one big document")
+    parser.add_argument('--balanced-training', action='store_true',
+                        help=("try to train each class equally, "
+                              "regardless of text length"))
     parser.add_argument('--pan-answers',
                         help="write answers here in the style expected by PAN")
     parser.add_argument('--raw-answers',
@@ -417,9 +448,14 @@ def main():
 
 
     if args.pan_answers:
-        train_silently(net, training_texts, args.leakage,
-                       args.sub_epochs, args.leakage_decay,
-                       args.learn_rate_decay, args.ignore_start)
+        if args.balanced_training:
+            train_silently_balanced(net, training_texts, args.leakage,
+                                    args.sub_epochs, args.leakage_decay,
+                                    args.learn_rate_decay, args.ignore_start)
+        else:
+            train_silently(net, training_texts, args.leakage,
+                           args.sub_epochs, args.leakage_decay,
+                           args.learn_rate_decay, args.ignore_start)
 
         write_pan_results(net, args.pan_answers, args.ignore_start, test_texts,
                           args.pan_hedge)
