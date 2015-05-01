@@ -253,10 +253,10 @@ def search_answer_files(file_pattern, truth):
     print
 
 
-def search_commits(file_pattern, truth):
+def search_commits(file_pattern, truth, n=8):
     results = _get_results(file_pattern, truth)
     top_scores = _get_sorted_scores(results)
-    notable_commits = set(x[1] for x in top_scores[:6])
+    notable_commits = set(x[1] for x in top_scores[:n])
     for v in results.values():
         notable_commits.add(v[0][1])
     for name in notable_commits:
