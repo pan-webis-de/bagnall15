@@ -402,7 +402,8 @@ def main():
                  "activation",
                  "learning_method",
                  "batch_size",
-                 "filename"):
+                 "filename",
+                 "presynaptic_noise"):
             net_kwargs[k] = v
 
     net, training_texts, test_texts = get_net_and_corpus(args.srcdir,
