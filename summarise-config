@@ -45,6 +45,7 @@ def parse_config_snippets(fn, lang_code, out=sys.stdout):
         else:
             raise RuntimeError("somehow we got in state %s" % state)
 
+    good_configs = {} #dedup by reversing key and value
     for k, v in config.items():
         v2 = v[3:-2]
         m = v2.index('-M')
@@ -55,7 +56,9 @@ def parse_config_snippets(fn, lang_code, out=sys.stdout):
                   '--ignore-start=10', '--batch-size=40'):
             if x in v2:
                 v2.remove(x)
-        print >>out, k, ' '.join(v2)
+        good_configs[tuple(v2)] = k
+    for config, commit in good_configs.items():
+        print >>out, commit, ' '.join(config)
 
 
 def main(args):
