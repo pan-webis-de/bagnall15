@@ -301,10 +301,14 @@ def train_silently_balanced(net, texts, leakage, sub_epochs, leakage_decay,
                             learn_rate_decay, ignore_start):
     from heapq import heapify, heappop, heappush
 
+    control = texts.pop('control')
     training_counts = [(0, name, cycle) for name, cycle in texts.items()]
     n_classes = len(training_counts)
 
     for i in range(sub_epochs):
+        if control is not None:
+            net.train(control.next(), 'control', leakage=leakage,
+                      ignore_start=ignore_start)
         epoch_len = 0
         epoch_texts = 0
         visited_classes = set()
@@ -320,6 +324,7 @@ def train_silently_balanced(net, texts, leakage, sub_epochs, leakage_decay,
                       ignore_start=ignore_start)
             heappush(training_counts, (n, name, cycle))
             epoch_texts += 1
+
         print >> sys.stderr, ("EPOCH %d trained on %d chars in %d texts" %
                               (i, epoch_len, epoch_texts))
         leakage *= leakage_decay
