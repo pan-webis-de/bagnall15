@@ -404,9 +404,8 @@ def main():
                         help="write answers here in the style expected by PAN")
     parser.add_argument('--raw-answers',
                         help="write answers here not adjusted for c@1")
-    parser.add_argument('--pan-hedge', type=float, default=0.04,
+    parser.add_argument('--pan-hedge', type=float, default=0.00,
                         help="radius of undecided zone in pan output")
-
 
     args = parser.parse_args()
 
