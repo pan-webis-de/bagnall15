@@ -37,7 +37,8 @@ def count_chars(text, decompose=False, category=None):
 def list_chars(text, decompose=False, category=None):
     chars = (c for c, n in language.count_chars(text, decompose))
     if category is not None:
-        chars = (x for x in chars if re.match(category, unicodedata.category(c)))
+        chars = (x for x in chars if re.match(category,
+                                              unicodedata.category(x)))
     print ''.join(chars)
 
 
