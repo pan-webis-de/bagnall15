@@ -176,14 +176,16 @@ def search(answers, truth, verbose=False):
 
     return indicators
 
-def _get_results(file_pattern, truth):
+def _get_results(file_pattern, truth, epoch_from_filename=False):
     results = defaultdict(list)
     for fn in glob.glob(file_pattern):
         answers = read_answers_file(fn)
         indicators = search(answers, truth)
-        m = re.search(r'answers-([^/]+)/', fn)
+        m = re.search(r'answers-([^/]+)/[^\d]+(\d+)?', fn)
         if m:
             shortname = m.group(1)
+            if epoch_from_filename:
+                shortname = '%s-%s' % (shortname, m.group(2))
         else:
             shortname = fn
         for k, v in indicators.items():
@@ -212,8 +214,8 @@ def _get_sorted_scores(results):
     return top_scores
 
 
-def search_answer_files(file_pattern, truth):
-    results = _get_results(file_pattern, truth)
+def search_answer_files(file_pattern, truth, epoch_from_filename=False):
+    results = _get_results(file_pattern, truth, epoch_from_filename)
 
     winners = _find_winners(results)
     best = max(c[0] for c, n, k in winners if not k.isalpha())
@@ -253,8 +255,8 @@ def search_answer_files(file_pattern, truth):
     print
 
 
-def search_commits(file_pattern, truth, n=8):
-    results = _get_results(file_pattern, truth)
+def search_commits(file_pattern, truth, n=8, epoch_from_filename=False):
+    results = _get_results(file_pattern, truth, epoch_from_filename)
     top_scores = _get_sorted_scores(results)
     notable_commits = set(x[1] for x in top_scores[:n])
     for v in results.values():
@@ -291,15 +293,20 @@ def main():
                         help="print good commit IDs")
     parser.add_argument('-v', '--verbose', action="store_true",
                         help="print more")
+    parser.add_argument('-e', '--epoch-from-filename', action="store_true",
+                        help=("if the basename has a number, "
+                              "disambiguate commits with it"))
 
     args = parser.parse_args()
     truth = read_truth_file(args.truth_file)
 
     if args.answer_file_pattern:
         if args.search_commits_only:
-            search_commits(args.answer_file_pattern, truth=truth)
+            search_commits(args.answer_file_pattern, truth=truth,
+                           epoch_from_filename=args.epoch_from_filename)
         else:
-            search_answer_files(args.answer_file_pattern, truth=truth)
+            search_answer_files(args.answer_file_pattern, truth=truth,
+                                epoch_from_filename=args.epoch_from_filename)
         sys.exit()
 
     answers = read_answers_file(args.answer_file)
