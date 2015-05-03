@@ -17,6 +17,7 @@ import numpy as np
 
 from colour import RED, GREEN, YELLOW, C_NORMAL, CYAN
 
+
 def get_alphabet(texts):
     text = ''.join(''.join(x) for x in texts)
     a = charmodel.Alphabet(text, ignore_case=False, threshold=1e-9)
@@ -71,7 +72,8 @@ def get_net_and_corpus(srcdir, remap, accept_fn, control_corpus=None,
     net = charmodel.Net(alphabet, textnames, metadata=metadata, **kwargs)
     training_texts = encode_and_cycle_texts(alphabet, raw_training_texts,
                                             reverse=reverse)
-    test_texts = encode_and_cycle_texts(alphabet, raw_test_texts, reverse=reverse)
+    test_texts = encode_and_cycle_texts(alphabet, raw_test_texts,
+                                        reverse=reverse)
     return net, training_texts, test_texts
 
 
@@ -113,7 +115,7 @@ def write_pan_results(net, filename, ignore_start, test_texts,
 
     norm = np.linalg.norm(rel_entropies, ord=1, axis=1)
     if np.all(norm):
-        rel_entropies /= norm[:,None]
+        rel_entropies /= norm[:, None]
 
     medians = np.median(rel_entropies, axis=1)
 
@@ -162,8 +164,10 @@ def write_pan_results(net, filename, ignore_start, test_texts,
         print >> f, "%s %.3f" % (name, score)
     f.close()
 
+
 def no_answer(*args):
     pass
+
 
 def test(net, ignore_start, test_texts, ground_truth_oracle=no_answer):
     entropies = get_entropies_matrix(net, ignore_start, test_texts)
@@ -177,7 +181,7 @@ def test(net, ignore_start, test_texts, ground_truth_oracle=no_answer):
     if True:
         norm = np.linalg.norm(rel_entropies, ord=1, axis=1)
         if np.all(norm):
-            rel_entropies /= norm[:,None]
+            rel_entropies /= norm[:, None]
 
     medians = np.median(rel_entropies, axis=1)
 
@@ -201,7 +205,7 @@ def test(net, ignore_start, test_texts, ground_truth_oracle=no_answer):
                                                   indices, medians, lengths):
         t = ground_truth_oracle(name)
         if t is None:
-            print "%s as no truth!" %name
+            print "%s as no truth!" % name
         print ("test: %s own % .3f median % .3f diff % .3f index %2d %5s %5db" %
                (name, score, median, median - score, index, t, length))
         sum_scores[t] += score
@@ -339,15 +343,16 @@ def main():
     parser.add_argument('srcdir', help="find training text here")
     parser.add_argument('-n', '--basename',
                         help="base filenames upon this")
-    parser.add_argument('-H', '--hidden-size', type=int, default=199, metavar='<nodes>',
-                        help="number of hidden nodes")
+    parser.add_argument('-H', '--hidden-size', type=int, default=199,
+                        metavar='<nodes>', help="number of hidden nodes")
     parser.add_argument('-r', '--rng-seed', type=int, default=-1,
                         help="rng seed (-1 for auto)")
     parser.add_argument('-e', '--sub-epochs', type=int, default=1,
                         help="how many cycles through the texts to do")
     parser.add_argument('--batch-size', type=int, default=20, metavar='<int>',
                         help="mini-batch size")
-    parser.add_argument('--presynaptic-noise', type=float, default=0, metavar='<float>',
+    parser.add_argument('--presynaptic-noise', type=float, default=0,
+                        metavar='<float>',
                         help="Add this much presynaptic noise")
     parser.add_argument('-l', '--learn-rate', type=float, default=1e-3,
                         help=charmodel.Net.learn_rate.__doc__)
@@ -358,9 +363,10 @@ def main():
                         help="change in leakage per sub-epoch")
     parser.add_argument('--learn-rate-decay', type=float, default=1,
                         help="change in learn-rate per sub-epoch")
-    parser.add_argument('-m', '--momentum', type=float, default=0.95, metavar='<0-1>',
-                        help=charmodel.Net.momentum.__doc__)
-    parser.add_argument('--momentum-weight', type=float, default=0.5, metavar='<0-1>',
+    parser.add_argument('-m', '--momentum', type=float, default=0.95,
+                        metavar='<0-1>', help=charmodel.Net.momentum.__doc__)
+    parser.add_argument('--momentum-weight', type=float, default=0.5,
+                        metavar='<0-1>',
                         help=charmodel.Net.momentum_weight.__doc__)
     parser.add_argument('--log-file', default=None,
                         help="log to this file")
@@ -393,7 +399,8 @@ def main():
                         help="use this character mapping")
     parser.add_argument('-f', '--filename',
                         help="save net here")
-    parser.add_argument('--control-corpus', help="add extra documents from here")
+    parser.add_argument('--control-corpus',
+                        help="add extra documents from here")
     parser.add_argument('--try-swapping-texts', action='store_true',
                         help="if known text is short, train on unknown text")
     parser.add_argument('--reverse', action='store_true',
@@ -431,7 +438,7 @@ def main():
     net_kwargs = {}
     for k, v in vars(args).items():
         if k in ("bptt_depth",
-                "hidden_size",
+                 "hidden_size",
                  "rng_seed",
                  "log_file",
                  "verbose",
@@ -480,8 +487,8 @@ def main():
         write_pan_results(net, args.pan_answers, args.ignore_start, test_texts,
                           args.pan_hedge)
         if args.raw_answers:
-            write_pan_results(net, args.raw_answers, args.ignore_start, test_texts,
-                              args.pan_hedge, raw=True)
+            write_pan_results(net, args.raw_answers, args.ignore_start,
+                              test_texts, args.pan_hedge, raw=True)
 
     else:
         ground_truth_oracle = read_truth_file(args.srcdir).get
@@ -489,7 +496,6 @@ def main():
         train(net, training_texts, args.leakage, args.sub_epochs,
               args.leakage_decay, args.learn_rate_decay, args.ignore_start,
               test_texts=test_texts, ground_truth_oracle=ground_truth_oracle)
-
 
 
 main()
