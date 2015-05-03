@@ -288,7 +288,7 @@ def train(net, texts, leakage, sub_epochs, leakage_decay, learn_rate_decay,
 
 
 def train_silently(net, texts, leakage, sub_epochs, leakage_decay,
-                   learn_rate_decay, ignore_start):
+                   learn_rate_decay, ignore_start, trace=None):
 
     for i in range(sub_epochs):
         for name, cycle in texts.items():
@@ -296,6 +296,9 @@ def train_silently(net, texts, leakage, sub_epochs, leakage_decay,
                       ignore_start=ignore_start)
         leakage *= leakage_decay
         net.learn_rate *= learn_rate_decay
+        if trace:
+            trace(net)
+
 
 def train_silently_balanced(net, texts, leakage, sub_epochs, leakage_decay,
                             learn_rate_decay, ignore_start):
@@ -404,6 +407,9 @@ def main():
                         help="write answers here in the style expected by PAN")
     parser.add_argument('--raw-answers',
                         help="write answers here not adjusted for c@1")
+    parser.add_argument('--raw-answers-trace',
+                        help=("write raw answers after every epoch "
+                              "(put %d in name)"))
     parser.add_argument('--pan-hedge', type=float, default=0.00,
                         help="radius of undecided zone in pan output")
 
@@ -450,16 +456,26 @@ def main():
     if args.try_swapping_texts:
         maybe_swap_texts(training_texts, test_texts)
 
+    if args.raw_answers_trace is not None:
+        def trace(i):
+            fn = args.raw_answers_trace % i
+            write_pan_results(net, fn, args.ignore_start,
+                              test_texts, args.pan_hedge,
+                              raw=True)
+    else:
+        trace = None
 
     if args.pan_answers:
         if args.balanced_training:
             train_silently_balanced(net, training_texts, args.leakage,
                                     args.sub_epochs, args.leakage_decay,
-                                    args.learn_rate_decay, args.ignore_start)
+                                    args.learn_rate_decay, args.ignore_start,
+                                    trace=trace)
         else:
             train_silently(net, training_texts, args.leakage,
                            args.sub_epochs, args.leakage_decay,
-                           args.learn_rate_decay, args.ignore_start)
+                           args.learn_rate_decay, args.ignore_start,
+                           trace=trace)
 
         write_pan_results(net, args.pan_answers, args.ignore_start, test_texts,
                           args.pan_hedge)
