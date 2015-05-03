@@ -121,8 +121,8 @@ def write_pan_results(net, filename, ignore_start, test_texts,
 
     if 'control' in net.class_names:
         control_index = net.class_names.index('control')
-        re_entropies = np.delete(rel_entropies,
-                                 control_index, axis=1)
+        rel_entropies = np.delete(rel_entropies,
+                                  control_index, axis=1)
 
     self_scores = rel_entropies.diagonal()
 
