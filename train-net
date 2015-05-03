@@ -301,7 +301,7 @@ def train_silently(net, texts, leakage, sub_epochs, leakage_decay,
         leakage *= leakage_decay
         net.learn_rate *= learn_rate_decay
         if trace:
-            trace(net)
+            trace(i)
 
 
 def train_silently_balanced(net, texts, leakage, sub_epochs, leakage_decay,
@@ -336,6 +336,8 @@ def train_silently_balanced(net, texts, leakage, sub_epochs, leakage_decay,
                               (i, epoch_len, epoch_texts))
         leakage *= leakage_decay
         net.learn_rate *= learn_rate_decay
+        if trace:
+            trace(i)
 
 
 def main():
