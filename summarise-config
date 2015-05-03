@@ -1,16 +1,15 @@
 #!/usr/bin/python
 import sys
-from collections import Counter
 import subprocess
 
-#presynaptic noise was broken until c34d2535
+# presynaptic noise was broken until c34d2535
 def does_psn_work(commit_id):
     s = subprocess.check_output(['git', 'rev-list', '--count',
                                  'c34d25351..%s' % commit_id])
     return int(s)
 
 
-#entirely unsafe!
+# entirely unsafe!
 def parse_config_snippets(fn, lang_code, out=sys.stdout):
     f = open(fn)
     config = {}
@@ -45,11 +44,11 @@ def parse_config_snippets(fn, lang_code, out=sys.stdout):
         else:
             raise RuntimeError("somehow we got in state %s" % state)
 
-    good_configs = {} #dedup by reversing key and value
+    good_configs = {}  # dedup by reversing key and value
     for k, v in config.items():
         v2 = v[3:-2]
         m = v2.index('-M')
-        del v2[m:m+2]
+        del v2[m:m + 2]
         # --presynaptic noise was ignored early on, default was 0.1
         for x in ('-r8', '--pan-hedge=0.0', '--try-swapping-texts',
                   '--activation=2', '--learning-method=4',
