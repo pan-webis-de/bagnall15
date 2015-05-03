@@ -141,10 +141,10 @@ def search(answers, truth, verbose=False):
     indicators['centre'] = best_candidate
     centre = best_candidate[3]
 
-
-    for s in range(max(centre - 20, 0),
-                   min(centre + 20, len(roc_trail))):
-        for e in range(s, min(centre + 20, len(roc_trail))):
+    min_s = min(max(centre - 20, 0), indices[0.45])
+    max_s = max(min(centre + 20, len(roc_trail)), indices[0.75])
+    for s in range(min_s, max_s):
+        for e in range(s, max_s):
             head, middle, tail, score_s, score_e = split_roc_trail(roc_trail, s, e)
             auc = calc_roc_from_trail(head + middle + tail, n_true, n_false)
             score, u_pos, u_neg = middle[0]
