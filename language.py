@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
 import unicodedata
 import re
 from collections import Counter
@@ -11,6 +10,7 @@ TEST_FN_PATTERN = r'^unknown\.txt$'
 training_fn_search = re.compile(TRAINING_FN_PATTERN).search
 test_fn_search = re.compile(TEST_FN_PATTERN).search
 
+
 def _read_file(fn, convert, default):
     if os.path.isdir(fn):
         fn = os.path.join(fn, default)
@@ -18,7 +18,7 @@ def _read_file(fn, convert, default):
     f = open(fn)
     for line in f:
         k, v = line.strip().split()
-        k = re.sub(r'\W', '', k)  #possible \uFEFF on first line
+        k = re.sub(r'\W', '', k)  # possible \uFEFF on first line
         result[k] = convert(v)
     f.close()
     return result
@@ -27,11 +27,14 @@ def _read_file(fn, convert, default):
 def read_truth_file(truth_file):
     return _read_file(truth_file, 'Y'.__eq__, 'truth.txt')
 
+
 def read_answers_file(fn):
     return _read_file(fn, float, 'answers.txt')
 
+
 def always(x):
     return True
+
 
 def load_texts(srcdir, remap,
                class_accept=always,
@@ -91,7 +94,7 @@ double_quotes = set('‟"„“”'.decode('utf8'))
 
 
 def unify_case(text):
-    #trickier than .lower() because of the decomposed case marker
+    # trickier than .lower() because of the decomposed case marker
     text = text.lower()
     return text.replace("¹".decode('utf8'), "")
 
