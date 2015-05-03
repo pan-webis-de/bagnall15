@@ -72,8 +72,8 @@ def main(args):
         if args and lang not in args:
             continue
         print lang
-        fn = "%s-best.txt" % lang
-        outfn = "%s-config.txt" % lang
+        fn = "results/%s-best.txt" % lang
+        outfn = "results/%s-config.txt" % lang
         subprocess.check_call(["./pick-out-good-config.sh",
                                lang, fn])
 
