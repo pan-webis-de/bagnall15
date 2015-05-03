@@ -1,13 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import argparse
-import os
-import sys
-import charmodel
-import random
-import itertools
 import re
-import json
 import language
 import unicodedata
 from collections import Counter
@@ -55,9 +49,10 @@ def print_char_map(text, threshold=1e-5, decompose=False,
 
     print '# -*- coding: utf-8 -*-'
     print '# OPTIONS: threshold %s, %s' % (threshold,
-                                           ' '.join(k for k, v in vars().items()
-                                                    if v == True))
-    charmap = {}
+                                           ' '.join(k for k, v in
+                                                    vars().items()
+                                                    if v))
+
     counts = language.count_chars(text, decompose)
     total = sum(x[1] for x in counts)
 
@@ -106,7 +101,7 @@ def print_char_map(text, threshold=1e-5, decompose=False,
                     note = 'removed %s, %d < %d' % (category, n, threshold)
                 else:
                     note = 'kept %s (%d)' % (category, n)
-        elif n < threshold: # a letter, keep for now
+        elif n < threshold:  # a letter, keep for now
             note = 'kept letter under threshold %d < %d' % (n, threshold)
 
         if ignore_case:
@@ -160,7 +155,8 @@ def main():
                         help="decompose characters")
 
     parser.add_argument('-C', '--unicode-category',
-                        help="only list/count characters whose category match this RE")
+                        help=("only list/count characters whose category "
+                              "match this RE"))
 
     parser.add_argument('-i', '--ignore-case', action='store_true',
                         help="be case-insensitive")
