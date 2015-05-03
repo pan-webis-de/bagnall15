@@ -1,9 +1,7 @@
 #!/usr/bin/python
 
-import os, sys
-import re
+import os
 from glob import glob
-import random
 
 HERE = os.path.dirname(__file__)
 RAW_DIR = os.path.join(HERE, "corpus/control/raw")
@@ -18,9 +16,11 @@ SETS = (
     ('greek', 'GR'),
 )
 
+
 def file_generator(d, base):
     for i in xrange(10000):
         yield open(os.path.join(d, "%s%04d.txt" % (base, i)), 'w')
+
 
 def make_control_corpus(dir_lang, file_lang):
     src_dirs = []
