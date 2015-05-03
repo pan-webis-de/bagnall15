@@ -15,7 +15,7 @@ from language import read_truth_file
 import mappings
 import numpy as np
 
-from colour import RED, GREEN, YELLOW, C_NORMAL, CYAN
+from colour import RED, GREEN, YELLOW, C_NORMAL
 
 
 def get_alphabet(texts):
@@ -306,7 +306,7 @@ def train_silently(net, texts, leakage, sub_epochs, leakage_decay,
 
 def train_silently_balanced(net, texts, leakage, sub_epochs, leakage_decay,
                             learn_rate_decay, ignore_start):
-    from heapq import heapify, heappop, heappush
+    from heapq import heappop, heappush
 
     control = texts.pop('control')
     training_counts = [(0, name, cycle) for name, cycle in texts.items()]
