@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 import argparse
 import sys
 import colour
@@ -6,6 +7,9 @@ import glob
 from collections import defaultdict
 import re
 from language import read_truth_file, read_answers_file
+import itertools
+import random
+from colour import RED, GREEN, YELLOW, C_NORMAL, CYAN, MAGENTA
 
 
 def get_roc_trail(answers, truth):
@@ -176,20 +180,27 @@ def search(answers, truth, verbose=False):
     return indicators
 
 
-def _get_results(file_pattern, truth, epoch_from_filename=False):
+def get_shortname(fn, epoch_from_filename=False):
+    m = re.search(r'answers-([^/]+)/[^\d]+(\d+)?', fn)
+    if m:
+        shortname = m.group(1)
+        if epoch_from_filename:
+            shortname = '%s-%s' % (shortname, m.group(2))
+    else:
+        shortname = fn
+    return shortname
+
+
+def _get_results(file_pattern, truth, epoch_from_filename=False,
+                 use_shortname=True):
     results = defaultdict(list)
     for fn in glob.glob(file_pattern):
         answers = read_answers_file(fn)
         indicators = search(answers, truth)
-        m = re.search(r'answers-([^/]+)/[^\d]+(\d+)?', fn)
-        if m:
-            shortname = m.group(1)
-            if epoch_from_filename:
-                shortname = '%s-%s' % (shortname, m.group(2))
-        else:
-            shortname = fn
+        if use_shortname:
+            fn = get_shortname(fn, epoch_from_filename)
         for k, v in indicators.items():
-            results[k].append((v, shortname))
+            results[k].append((v, fn))
     return results
 
 
@@ -283,6 +294,70 @@ def search_one(answers, truth, verbose=False):
     return indicators
 
 
+def test_ensembles(file_pattern, ensemble_size, truth,
+                   cutoff=10, replace=False, randomise=False,
+                   epoch_from_filename=False):
+
+    results = _get_results(file_pattern, truth, epoch_from_filename,
+                           use_shortname=False)
+    top_scores = _get_sorted_scores(results)
+    if randomise:
+        random.shuffle(top_scores)
+
+    singles = {}
+    for _, fn in sorted(top_scores[:cutoff]):
+        shortname = get_shortname(fn)
+        singles[shortname] = read_answers_file(fn)
+        print "%s %.3f" %(shortname, _)
+
+    ensembles = []
+    if replace:
+        combos = itertools.combinations_with_replacement
+    else:
+        combos = itertools.combinations
+
+    for names in combos(singles.keys(), ensemble_size):
+        ensemble = {}
+        for n in names:
+            answers = singles.get(n)
+            for k, v in answers.items():
+                score = ensemble.get(k, 0.0)
+                ensemble[k] = score + v
+
+        indicators = search(ensemble, truth)
+        ensembles.append((indicators['centre'], names, indicators))
+
+    ensembles.sort()
+    centre_sum = 0.0
+    centre_sum2 = 0.0
+
+    for i, x in enumerate(ensembles):
+        c, names, indicators = x
+        name = '-'.join(names)
+        n = len(set(names))
+        if n == 1:
+            colour = RED
+        elif n < ensemble_size:
+            colour = YELLOW
+        else:
+            colour = C_NORMAL
+        if i == len(ensembles) // 2:
+            colour = MAGENTA
+        centre = c[5] / ensemble_size
+        centre_sum += centre
+        centre_sum2 += centre * centre
+
+        print "%s%s%s %.3f auc %.3f c@1 %.3f centre %.2f" % (colour,
+                                                             name, C_NORMAL,
+                                                             c[0], c[2], c[1],
+                                                             centre)
+
+    centre_mean = centre_sum / len(ensembles)
+    centre_dev = (centre_sum2 / len(ensembles) -
+                  centre_mean * centre_mean) ** 0.5
+    print "%scentre %.3f±%.3f%s" % (YELLOW, centre_mean, centre_dev, C_NORMAL)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--answer-file', help="read scores from here")
@@ -298,6 +373,11 @@ def main():
     parser.add_argument('-e', '--epoch-from-filename', action="store_true",
                         help=("if the basename has a number, "
                               "disambiguate commits with it"))
+    parser.add_argument('-E', '--test-ensembles', type=int,
+                        help="test ensembles of this size")
+    parser.add_argument('--randomise', action="store_true",
+                        help="use random sample in ensembles")
+
 
     args = parser.parse_args()
     truth = read_truth_file(args.truth_file)
@@ -305,6 +385,11 @@ def main():
     if args.answer_file_pattern:
         if args.search_commits_only:
             search_commits(args.answer_file_pattern, truth=truth,
+                           epoch_from_filename=args.epoch_from_filename)
+        elif args.test_ensembles:
+            test_ensembles(args.answer_file_pattern,
+                           args.test_ensembles, truth=truth,
+                           randomise=args.randomise,
                            epoch_from_filename=args.epoch_from_filename)
         else:
             search_answer_files(args.answer_file_pattern, truth=truth,
