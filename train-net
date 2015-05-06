@@ -308,7 +308,7 @@ def train_silently_balanced(net, texts, leakage, sub_epochs, leakage_decay,
                             learn_rate_decay, ignore_start):
     from heapq import heappop, heappush
 
-    control = texts.pop('control')
+    control = texts.pop('control', None)
     training_counts = [(0, name, cycle) for name, cycle in texts.items()]
     n_classes = len(training_counts)
 

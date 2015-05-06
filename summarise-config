@@ -46,7 +46,13 @@ def parse_config_snippets(fn, lang_code, out=sys.stdout):
 
     good_configs = {}  # dedup by reversing key and value
     for k, v in config.items():
-        v2 = v[3:-2]
+        v2 = v[3:]
+        try:
+            m = v2.index('--control-corpus')
+            del v2[m:m + 2]
+        except ValueError, e:
+            #print >> sys.stderr, v2, e
+            v2.append('<NO-CONTROL>')
         m = v2.index('-M')
         del v2[m:m + 2]
         # --presynaptic noise was ignored early on, default was 0.1
