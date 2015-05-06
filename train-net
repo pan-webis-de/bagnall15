@@ -305,7 +305,7 @@ def train_silently(net, texts, leakage, sub_epochs, leakage_decay,
 
 
 def train_silently_balanced(net, texts, leakage, sub_epochs, leakage_decay,
-                            learn_rate_decay, ignore_start):
+                            learn_rate_decay, ignore_start, trace=None):
     from heapq import heappop, heappush
 
     control = texts.pop('control', None)
