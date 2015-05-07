@@ -87,10 +87,46 @@ def split_roc_trail(orig_trail, s, e):
     return head, [(score, positives, negatives)], tail, score_s, score_e
 
 
-def search(answers, truth, verbose=False):
+def search_for_centre(answers, truth):
     roc_trail = get_roc_trail(answers, truth)
     n_true = sum(truth.values())
     n_false = len(truth) - n_true
+
+    auc = calc_roc_from_trail(roc_trail, n_true, n_false)
+
+    # at bottom end of scale
+    true_positives = n_true
+    true_negatives = 0
+    scale = 1.0 / len(truth)
+    best_candidate = (0,)
+
+    for i, roc_data in enumerate(roc_trail):
+        score, positives, negatives = roc_data
+        true_positives -= positives
+        n_undecided = positives + negatives
+        n_correct = true_positives + true_negatives
+        cat1 = (n_correct + n_undecided * n_correct * scale) * scale
+        score = cat1 * auc
+        if score > best_candidate[0]:
+            best_candidate = (score, cat1, auc, i, i, score, score,
+                              n_undecided, n_correct, true_positives,
+                              true_negatives)
+        true_negatives += negatives
+    return best_candidate, roc_trail, auc
+
+
+def search(answers, truth, verbose=False):
+    if verbose:
+        print "searching around"
+        print_c = print_candidate
+    else:
+        def print_c(*args, **kwargs):
+            pass
+
+    best_candidate, roc_trail, auc = search_for_centre(answers, truth)
+    indicators = {'centre': best_candidate}
+    centre = best_candidate[3]
+    print_c(best_candidate)
 
     index_keys = (0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75)
     indices = {k: 0 for k in index_keys}
@@ -100,44 +136,14 @@ def search(answers, truth, verbose=False):
             if score <= k:
                 indices[k] = i
 
-    if verbose:
-        print "searching around"
-        print indices
     rindices = {v: k for k, v in indices.items()}
 
-    auc = calc_roc_from_trail(roc_trail, n_true, n_false)
     default_cat1 = calc_cat1(answers, truth)
     default_score = auc * default_cat1
 
-    # at bottom end of scale
-    true_positives = n_true
-    true_negatives = 0
     scale = 1.0 / len(truth)
-    candidates = []
-    best_candidate = (0,)
-    indicators = {}
-
-    if verbose:
-        print_c = print_candidate
-    else:
-        def print_c(*args, **kwargs):
-            pass
-
-    for i, roc_data in enumerate(roc_trail):
-        score, positives, negatives = roc_data
-        true_positives -= positives
-        n_undecided = positives + negatives
-        n_correct = true_positives + true_negatives
-        cat1 = (n_correct + n_undecided * n_correct * scale) * scale
-        candidate = (cat1 * auc, cat1, auc, i, i, score, score,
-                     n_undecided, n_correct, true_positives, true_negatives)
-        if candidate > best_candidate:
-            best_candidate = candidate
-        true_negatives += negatives
-
-    print_c(best_candidate)
-    indicators['centre'] = best_candidate
-    centre = best_candidate[3]
+    n_true = sum(truth.values())
+    n_false = len(truth) - n_true
 
     min_s = min(max(centre - 20, 0), indices[0.45])
     max_s = max(min(centre + 20, len(roc_trail)), indices[0.75])
@@ -154,7 +160,6 @@ def search(answers, truth, verbose=False):
             cat1 = (n_correct + n_undecided * n_correct * scale) * scale
             candidate = (cat1 * auc, cat1, auc, s, e, score_s, score_e,
                          n_undecided, n_correct, n_tp, n_tf)
-            candidates.append(candidate)
             if candidate > best_candidate:
                 best_candidate = candidate
                 print_c(candidate)
