@@ -15,5 +15,5 @@ for n in $languages; do
     mkdir -p $DEST/$n
     time ./pan-test -i corpus/*$n-2015-04-19* -o $DEST/$n --raw-answers \
         --raw-answers-trace \
-        2>>$DEST/$n/stderr.log
+        2>>$DEST/stderr-$n.log
  done
