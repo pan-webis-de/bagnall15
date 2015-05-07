@@ -1,9 +1,9 @@
 all::
 
-NL_CORPUS = corpus/pan15-authorship-verification-training-dataset-dutch-2015-03-02
-EN_CORPUS = corpus/pan15-authorship-verification-training-dataset-english-2015-03-02
-ES_CORPUS = corpus/pan15-authorship-verification-training-dataset-spanish-2015-03-02
-GR_CORPUS = corpus/pan15-authorship-verification-training-dataset-greek-2015-03-02
+NL_CORPUS = corpus/pan15-authorship-verification-training-dataset-dutch-2015-04-19
+EN_CORPUS = corpus/pan15-authorship-verification-training-dataset-english-2015-04-19
+ES_CORPUS = corpus/pan15-authorship-verification-training-dataset-spanish-2015-04-19
+GR_CORPUS = corpus/pan15-authorship-verification-training-dataset-greek-2015-04-19
 
 recur:
 	git clone https://github.com/douglasbagnall/recur.git
