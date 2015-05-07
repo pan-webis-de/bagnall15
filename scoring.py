@@ -6,7 +6,6 @@ import re
 from language import read_answers_file
 import itertools
 import random
-from colour import RED, GREEN, YELLOW, C_NORMAL, CYAN, MAGENTA
 
 
 def get_roc_trail(answers, truth):
@@ -333,23 +332,25 @@ def test_ensembles(file_pattern, ensemble_size, truth,
         name = '-'.join(names)
         n = len(set(names))
         if n == 1:
-            colour = RED
+            _colour = colour.RED
         elif n < ensemble_size:
-            colour = YELLOW
+            _colour = colour.YELLOW
         else:
-            colour = C_NORMAL
+            _colour = colour.C_NORMAL
         if i == len(ensembles) // 2:
-            colour = MAGENTA
+            _colour = colour.MAGENTA
         centre = c[5] / ensemble_size
         centre_sum += centre
         centre_sum2 += centre * centre
 
-        print "%s%s%s %.3f auc %.3f c@1 %.3f centre %.2f" % (colour,
-                                                             name, C_NORMAL,
+        print "%s%s%s %.3f auc %.3f c@1 %.3f centre %.2f" % (_colour,
+                                                             name,
+                                                             colour.C_NORMAL,
                                                              c[0], c[2], c[1],
                                                              centre)
 
     centre_mean = centre_sum / len(ensembles)
     centre_dev = (centre_sum2 / len(ensembles) -
                   centre_mean * centre_mean) ** 0.5
-    print "%scentre %.3f±%.3f%s" % (YELLOW, centre_mean, centre_dev, C_NORMAL)
+    print "%scentre %.3f±%.3f%s" % (colour.YELLOW, centre_mean, centre_dev,
+                                    colour.C_NORMAL)
