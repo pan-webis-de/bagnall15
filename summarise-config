@@ -1,0 +1,150 @@
+#!/usr/bin/python
+import re
+import os
+import argparse
+from language import read_truth_file, read_answers_file
+from scoring import search_for_centre
+import subprocess
+import colour
+
+HERE = os.path.dirname(__file__)
+
+
+# presynaptic noise was broken until c34d2535
+def does_psn_work(commit_id):
+    s = subprocess.check_output(['git', 'rev-list', '--count',
+                                 'c34d25351..%s' % commit_id])
+    return int(s)
+
+
+def prune_config(config, commit):
+    pruned = []
+    skip = 0
+    replace = {'--control-corpus': ('CONTROL', 1)}
+
+    for x in config:
+        if skip:
+            skip -= 1
+            continue
+        if x in {'-M', '-n', '--pan-answers', '--raw-answers',
+                 '--raw-answers-trace'}:
+            skip = 1
+            continue
+        if x in replace:
+            r, skip = replace[x]
+            pruned.append(r)
+            continue
+        if x in {'-r8', '--pan-hedge=0.0', '--try-swapping-texts',
+                 '--activation=2', '--learning-method=4',
+                 '--ignore-start=10', '--batch-size=40'}:
+            continue
+        if x.startswith('corpus/pan15-authorship-verification-training-data'):
+            continue
+
+        if (x.startswith('--presynaptic-noise=') and
+            not does_psn_work(commit)):
+            continue
+
+        pruned.append(x)
+
+    if 'CONTROL' not in pruned:
+        pruned.append("%sNO-CONTROL%s" % (colour.RED, colour.C_NORMAL))
+
+    return pruned
+
+
+def get_truth_map(lang):
+    map = {}
+    for date in ('2015-03-02', '2015-04-19'):
+        fn = os.path.join(HERE, ("corpus/pan15-authorship-verification-"
+                                 "training-dataset-%s-%s/truth.txt" %
+                                 (lang, date)))
+        truth = read_truth_file(fn)
+        map[date] = truth
+    return map
+
+
+def always(x):
+    return True
+
+
+def get_score_for_lang(lang, accept_corpus=always):
+    truth_map = get_truth_map(lang)
+
+    results = []
+    for d in os.listdir(HERE):
+        fn = os.path.join(HERE, d, lang, 'raw-answers.txt')
+        try:
+            answers = read_answers_file(fn)
+        except IOError:
+            continue
+
+        f = open(os.path.join(HERE, d, 'stderr-%s.log' % lang))
+        for line in f:
+            if line.startswith('running ./train-net'):
+                break
+        else:
+            f.close()
+            continue
+        f.close()
+
+        config = line.split()[2:]
+        for x in config:
+            if 'pan15-authorship-verification-training-dataset-' in x:
+                if not accept_corpus(x):
+                    continue
+                date = x[-10:]
+                break
+        else:
+            # did not break, thus no acceptable corpus
+            continue
+
+        truth = truth_map[date]
+
+        score, _, _ = search_for_centre(answers, truth)
+        commit = d[8:]
+        results.append((score, commit, date, config))
+
+    return results
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('languages', nargs='*',
+                        help="languages to process")
+    parser.add_argument('--corpus-regex',
+                        help="restrict corpus with regex (try 03, 04)")
+    parser.add_argument('-n', '--number-of-results', type=int, default=10,
+                        help="show only this many results")
+
+    args = parser.parse_args()
+
+    LANG_CONFIG = [
+        ('spanish', 'SP'),
+        ('english', 'EN'),
+        ('greek', 'GR'),
+        ('dutch', 'DU'),
+    ]
+    if args.corpus_regex:
+        accept_corpus = re.compile(args.corpus_regex).search
+    else:
+        accept_corpus = always
+
+    for lang, code in LANG_CONFIG:
+        if args.languages and lang not in args.languages:
+            continue
+        print "\n%s%s%s" % (colour.GREEN, lang, colour.C_NORMAL)
+        results = get_score_for_lang(lang, accept_corpus)
+        results.sort()
+        seen_results = set()
+        for c, commit, date, config in results[-args.number_of_results:]:
+            pruned_config = ' '.join(prune_config(config, commit))
+            sig = (c[0], pruned_config)
+            if sig in seen_results:
+                print "%sduplicate%s" % (colour.YELLOW, colour.C_NORMAL)
+                continue
+            seen_results.add(sig)
+            print "%.3f %s %s" % (c[0], commit, pruned_config)
+
+
+main()
