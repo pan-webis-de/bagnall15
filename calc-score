@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 import argparse
 import sys
+import re
 from language import read_truth_file, read_answers_file
 
 from scoring import calc_auc, calc_cat1, search_answer_files,\
-    search_commits, search_one, test_ensembles
+    search_commits, search_one, test_ensembles, regex_filter, \
+    simple_file_gen, versioned_file_gen
 
 
 def main():
@@ -27,21 +29,45 @@ def main():
                         help="test ensembles of this size")
     parser.add_argument('--randomise', action="store_true",
                         help="use random sample in ensembles")
+    parser.add_argument('--cat1-centre', type=float, default=None,
+                        help="use this as c@1 centre")
+    parser.add_argument('--cat1-radius', type=float, default=0,
+                        help="use this as c@1 centre")
+    parser.add_argument('--corpus-version', type=int, default=-1,
+                        help="restrict corpus to version 3 or 4 (default auto)")
 
     args = parser.parse_args()
     truth = read_truth_file(args.truth_file)
 
     if args.answer_file_pattern:
-        if args.search_commits_only:
-            search_commits(args.answer_file_pattern, truth=truth,
-                           epoch_from_filename=args.epoch_from_filename)
-        elif args.test_ensembles:
-            test_ensembles(args.answer_file_pattern,
-                           args.test_ensembles, truth=truth,
-                           randomise=args.randomise,
-                           epoch_from_filename=args.epoch_from_filename)
+        if args.corpus_version == -1 and args.truth_file:
+            m = re.search(r'2015-0(\d)-', args.truth_file)
+            if m:
+                args.corpus_version = int(m.group(1))
+            else:
+                args.corpus_version = 0
+        print args.corpus_version
+        if args.corpus_version:
+            filename_gen = versioned_file_gen(args.answer_file_pattern,
+                                              args.corpus_version)
         else:
-            search_answer_files(args.answer_file_pattern, truth=truth,
+            filename_gen = simple_file_gen(args.answer_file_pattern)
+
+        if args.search_commits_only:
+            search_commits(filename_gen, truth=truth,
+                           epoch_from_filename=args.epoch_from_filename,
+                           cat1_centre=args.cat1_centre,
+                           cat1_radius=args.cat1_radius)
+        elif args.test_ensembles:
+            test_ensembles(filename_gen, args.test_ensembles,
+                           truth=truth, randomise=args.randomise,
+                           epoch_from_filename=args.epoch_from_filename,
+                           cat1_centre=args.cat1_centre,
+                           cat1_radius=args.cat1_radius)
+        else:
+            if args.cat1_centre:
+                print "--cat1-centre doesn't apply in this mode"
+            search_answer_files(filename_gen, truth=truth,
                                 epoch_from_filename=args.epoch_from_filename)
         sys.exit()
 

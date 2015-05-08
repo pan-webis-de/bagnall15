@@ -3,7 +3,8 @@ import re
 import os
 import argparse
 from language import read_truth_file, read_answers_file
-from scoring import search_for_centre
+from scoring import search_for_centre, evaluate_fixed_cat1
+from scoring import regex_filter, always
 import subprocess
 import colour
 
@@ -64,11 +65,8 @@ def get_truth_map(lang):
     return map
 
 
-def always(x):
-    return True
-
-
-def get_score_for_lang(lang, accept_corpus=always):
+def get_score_for_lang(lang, accept_corpus=always,
+                       cat1_centre=None, cat1_radius=0):
     truth_map = get_truth_map(lang)
 
     results = []
@@ -100,8 +98,11 @@ def get_score_for_lang(lang, accept_corpus=always):
             continue
 
         truth = truth_map[date]
-
-        score, _, _ = search_for_centre(answers, truth)
+        if cat1_centre is None:
+            score, _, _ = search_for_centre(answers, truth)
+        else:
+            score, _, _ = evaluate_fixed_cat1(answers, truth,
+                                              cat1_centre, cat1_radius)
         commit = d[8:]
         results.append((score, commit, date, config))
 
@@ -116,6 +117,11 @@ def main():
                         help="restrict corpus with regex (try 03, 04)")
     parser.add_argument('-n', '--number-of-results', type=int, default=10,
                         help="show only this many results")
+    parser.add_argument('--cat1-centre', type=float, default=None,
+                        help="use this as c@1 centre")
+    parser.add_argument('--cat1-radius', type=float, default=0,
+                        help="use this as c@1 centre")
+
 
     args = parser.parse_args()
 
@@ -125,16 +131,14 @@ def main():
         ('greek', 'GR'),
         ('dutch', 'DU'),
     ]
-    if args.corpus_regex:
-        accept_corpus = re.compile(args.corpus_regex).search
-    else:
-        accept_corpus = always
+    accept_corpus = regex_filter(args.corpus_regex)
 
     for lang, code in LANG_CONFIG:
         if args.languages and lang not in args.languages:
             continue
         print "\n%s%s%s" % (colour.GREEN, lang, colour.C_NORMAL)
-        results = get_score_for_lang(lang, accept_corpus)
+        results = get_score_for_lang(lang, accept_corpus,
+                                     args.cat1_centre, args.cat1_radius)
         results.sort()
         seen_results = set()
         for c, commit, date, config in results[-args.number_of_results:]:

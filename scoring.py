@@ -6,6 +6,42 @@ import re
 from language import read_answers_file
 import itertools
 import random
+import subprocess
+
+
+def simple_file_gen(file_pattern):
+    for fn in glob.glob(file_pattern):
+        yield fn
+
+
+# corpus changed in early may. I'm calling them versions 3 and 4
+# because those appear in the filenames. (as months)
+def uses_corpus_version(n, path):
+    commit_id = get_shortname(path)
+    if n == 3:
+        cmd = ['git', 'rev-list', '--before=2015-05-07',
+               '--count', '%s..ccf6f6679' % commit_id]
+    elif n == 4:
+        cmd = ['git', 'rev-list',  '--since=2015-05-07',
+               '--count', 'ccf6f6679..%s' % commit_id]
+    s = subprocess.check_output(cmd)
+    return int(s)
+
+
+def versioned_file_gen(file_pattern, version):
+    for fn in glob.glob(file_pattern):
+        if uses_corpus_version(version, fn):
+            yield fn
+
+
+def always(x):
+    return True
+
+
+def regex_filter(regex):
+    if regex is None:
+        return always
+    return re.compile(regex).search
 
 
 def get_roc_trail(answers, truth):
@@ -15,11 +51,14 @@ def get_roc_trail(answers, truth):
         r = rmap.setdefault(v, [0, 0])
         r[0] += t
         r[1] += not t
-    return [(score, d[0], d[1])
-            for score, d in sorted(rmap.items())]
+    trail = [(score, d[0], d[1])
+             for score, d in sorted(rmap.items())]
+    n_true = sum(truth.values())
+    n_false = len(truth) - n_true
+    return trail, n_true, n_false
 
 
-def calc_roc_from_trail(roc_trail, n_true, n_false):
+def calc_auc_from_trail(roc_trail, n_true, n_false):
     true_positives, false_positives = n_true, n_false
     tp_scale = 1.0 / (n_true or 1)
     fp_scale = 1.0 / (n_false or 1)
@@ -40,10 +79,8 @@ def calc_roc_from_trail(roc_trail, n_true, n_false):
 
 
 def calc_auc(answers, truth):
-    results = get_roc_trail(answers, truth)
-    n_true = sum(truth.values())
-    n_false = len(truth) - n_true
-    return calc_roc_from_trail(results, n_true, n_false)
+    results, n_true, n_false = get_roc_trail(answers, truth)
+    return calc_auc_from_trail(results, n_true, n_false)
 
 
 def calc_cat1(answers, truth):
@@ -87,12 +124,39 @@ def split_roc_trail(orig_trail, s, e):
     return head, [(score, positives, negatives)], tail, score_s, score_e
 
 
-def search_for_centre(answers, truth):
-    roc_trail = get_roc_trail(answers, truth)
-    n_true = sum(truth.values())
-    n_false = len(truth) - n_true
+def evaluate_fixed_cat1(answers, truth, cat1_centre, cat1_radius=0):
+    roc_trail, n_true, n_false = get_roc_trail(answers, truth)
+    cat1_bottom = cat1_centre - cat1_radius
+    cat1_top = cat1_centre + cat1_radius
 
-    auc = calc_roc_from_trail(roc_trail, n_true, n_false)
+    s = None
+    for i, x in enumerate(roc_trail):
+        score, u_pos, u_neg = x
+        if s is None and score > cat1_bottom:
+            s = i
+        if score > cat1_top:
+            break
+    e = max(s, i)
+
+    head, middle, tail, score_s, score_e = split_roc_trail(roc_trail, s, e)
+    auc = calc_auc_from_trail(head + middle + tail, n_true, n_false)
+    score, u_pos, u_neg = middle[0]
+    n_undecided = u_pos + u_neg
+    n_tp = sum(x[1] for x in tail)
+    n_tf = sum(x[2] for x in head)
+    n_correct = n_tp + n_tf
+    scale = 1.0 / len(truth)
+    cat1 = (n_correct + n_undecided * n_correct * scale) * scale
+    candidate = (cat1 * auc, cat1, auc, s, e, cat1_bottom, cat1_top,
+                 n_undecided, n_correct, n_tp, n_tf)
+
+    return candidate, roc_trail, auc
+
+
+def search_for_centre(answers, truth):
+    roc_trail, n_true, n_false = get_roc_trail(answers, truth)
+
+    auc = calc_auc_from_trail(roc_trail, n_true, n_false)
 
     # at bottom end of scale
     true_positives = n_true
@@ -151,7 +215,7 @@ def search(answers, truth, verbose=False):
         for e in range(s, max_s):
             head, middle, tail, score_s, score_e = split_roc_trail(roc_trail,
                                                                    s, e)
-            auc = calc_roc_from_trail(head + middle + tail, n_true, n_false)
+            auc = calc_auc_from_trail(head + middle + tail, n_true, n_false)
             score, u_pos, u_neg = middle[0]
             n_undecided = u_pos + u_neg
             n_tp = sum(x[1] for x in tail)
@@ -191,15 +255,22 @@ def get_shortname(fn, epoch_from_filename=False):
         shortname = fn
     return shortname
 
-
-def _get_results(file_pattern, truth, epoch_from_filename=False,
+def answers_generator(filename_gen, truth, epoch_from_filename=False,
                  use_shortname=True):
-    results = defaultdict(list)
-    for fn in glob.glob(file_pattern):
+    for fn in filename_gen:
         answers = read_answers_file(fn)
-        indicators = search(answers, truth)
         if use_shortname:
             fn = get_shortname(fn, epoch_from_filename)
+        yield (fn, answers)
+
+    results = defaultdict(list)
+
+
+def get_indicators(answers_iter, truth):
+    #XXX auto-truth?
+    results = defaultdict(list)
+    for fn, answers in answers_iter:
+        indicators = search(answers, truth)
         for k, v in indicators.items():
             results[k].append((v, fn))
     return results
@@ -214,7 +285,7 @@ def _find_winners(results):
     return winners
 
 
-def _get_sorted_scores(results):
+def get_indicator_scores(results):
     totals = {}
     for x in results.values():
         for candidate, fn in x:
@@ -227,8 +298,24 @@ def _get_sorted_scores(results):
     return top_scores
 
 
-def search_answer_files(file_pattern, truth, epoch_from_filename=False):
-    results = _get_results(file_pattern, truth, epoch_from_filename)
+def get_sorted_scores(answers_gen, truth, cat1_centre=None, cat1_radius=0):
+    scores = []
+    for fn, answers in answers_gen:
+        if cat1_centre is not None:
+            s = evaluate_fixed_cat1(answers, truth, cat1_centre, cat1_radius)
+        else:
+            s = search_for_centre(answers, truth)
+        scores.append((s[0], fn))
+    scores.sort()
+    scores.reverse()
+    return scores
+
+
+def search_answer_files(filename_gen, truth, epoch_from_filename=False):
+
+    answers_gen = answers_generator(filename_gen, truth,
+                                    epoch_from_filename)
+    results = get_indicators(answers_gen, truth)
 
     winners = _find_winners(results)
     best = max(c[0] for c, n, k in winners if not k.isalpha())
@@ -244,7 +331,7 @@ def search_answer_files(file_pattern, truth, epoch_from_filename=False):
             c = ''
         print_candidate(candidate, c, prefix=key, fn=name)
 
-    top_scores = _get_sorted_scores(results)
+    top_scores = get_indicator_scores(results)
 
     colour_map = {t[1]: c for c, t
                   in zip(colour.spectra['warm'], top_scores)}
@@ -268,12 +355,21 @@ def search_answer_files(file_pattern, truth, epoch_from_filename=False):
     print
 
 
-def search_commits(file_pattern, truth, n=8, epoch_from_filename=False):
-    results = _get_results(file_pattern, truth, epoch_from_filename)
-    top_scores = _get_sorted_scores(results)
-    notable_commits = set(x[1] for x in top_scores[:n])
-    for v in results.values():
-        notable_commits.add(v[0][1])
+def search_commits(filename_gen, truth, n=8, epoch_from_filename=False,
+                   cat1_centre=None, cat1_radius=0):
+    answers_gen = answers_generator(filename_gen, truth,
+                                    epoch_from_filename,
+                                    use_shortname)
+    if cat1_generator is None:
+        results = get_indicators(answers_gen, truth)
+        scores = get_indicator_scores(results)
+        notable_commits = set(x[1] for x in scores[:n])
+        for v in results.values():
+            notable_commits.add(v[0][1])
+
+    else:
+        notable_commits = get_sorted_scores(answers_gen, truth)[:n]
+
     for name in notable_commits:
         print name
 
@@ -295,21 +391,22 @@ def search_one(answers, truth, verbose=False):
     return indicators
 
 
-def test_ensembles(file_pattern, ensemble_size, truth,
-                   cutoff=10, replace=False, randomise=False,
-                   epoch_from_filename=False):
+def test_ensembles(filename_gen, ensemble_size, truth,
+                   cutoff=14, replace=False, randomise=False,
+                   epoch_from_filename=False,
+                   cat1_centre=None, cat1_radius=0):
+    answers_gen = answers_generator(filename_gen, truth,
+                                    epoch_from_filename, False)
 
-    results = _get_results(file_pattern, truth, epoch_from_filename,
-                           use_shortname=False)
-    top_scores = _get_sorted_scores(results)
+    scores = get_sorted_scores(answers_gen, truth, cat1_centre, cat1_radius)
     if randomise:
-        random.shuffle(top_scores)
+        random.shuffle(scores)
 
     singles = {}
-    for _, fn in sorted(top_scores[:cutoff]):
+    for _, fn in sorted(scores[:cutoff]):
         shortname = get_shortname(fn)
         singles[shortname] = read_answers_file(fn)
-        print "%s %.3f" % (shortname, _)
+        print "%s %.3f" % (shortname, _[0])
 
     ensembles = []
     if replace:
@@ -324,16 +421,23 @@ def test_ensembles(file_pattern, ensemble_size, truth,
             for k, v in answers.items():
                 score = ensemble.get(k, 0.0)
                 ensemble[k] = score + v
+        for k, v in ensemble.items():
+            ensemble[k] = v / ensemble_size
 
-        indicators = search(ensemble, truth)
-        ensembles.append((indicators['centre'], names, indicators))
+        if cat1_centre is None:
+            centre = search_for_centre(ensemble, truth)
+        else:
+            centre = evaluate_fixed_cat1(ensemble, truth, cat1_centre,
+                                         cat1_radius)
+
+        ensembles.append((centre[0], names))
 
     ensembles.sort()
     centre_sum = 0.0
     centre_sum2 = 0.0
 
     for i, x in enumerate(ensembles):
-        c, names, indicators = x
+        c, names = x
         name = '-'.join(names)
         n = len(set(names))
         if n == 1:
@@ -344,7 +448,7 @@ def test_ensembles(file_pattern, ensemble_size, truth,
             _colour = colour.C_NORMAL
         if i == len(ensembles) // 2:
             _colour = colour.MAGENTA
-        centre = c[5] / ensemble_size
+        centre = c[5]
         centre_sum += centre
         centre_sum2 += centre * centre
 
@@ -355,7 +459,7 @@ def test_ensembles(file_pattern, ensemble_size, truth,
                                                              centre)
 
     centre_mean = centre_sum / len(ensembles)
-    centre_dev = (centre_sum2 / len(ensembles) -
-                  centre_mean * centre_mean) ** 0.5
+    centre_dev = max(0, (centre_sum2 / len(ensembles) -
+                         centre_mean * centre_mean)) ** 0.5
     print "%scentre %.3f±%.3f%s" % (colour.YELLOW, centre_mean, centre_dev,
                                     colour.C_NORMAL)
