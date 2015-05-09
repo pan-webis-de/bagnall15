@@ -126,3 +126,13 @@ def print_word_counts(c):
         print w,
     print
     print len(c)
+
+LANG_CODES = ('DU', 'SP', 'EN', 'GR')
+
+def guess_directory_lang(d):
+    for subdir in os.listdir(d):
+        if not os.path.isdir(os.path.join(d, subdir)):
+            continue
+        key = subdir[:2]
+        if key in LANG_CODES and subdir[2:].isdigit():
+            return key
