@@ -37,6 +37,9 @@ def versioned_file_gen(file_pattern, version):
 def always(x):
     return True
 
+def never(x):
+    return False
+
 
 def regex_filter(regex):
     if regex is None:
@@ -298,9 +301,12 @@ def get_indicator_scores(results):
     return top_scores
 
 
-def get_sorted_scores(answers_gen, truth, cat1_centre=None, cat1_radius=0):
+def get_sorted_scores(answers_gen, truth, cat1_centre=None, cat1_radius=0,
+                      exclude=None):
     scores = []
     for fn, answers in answers_gen:
+        if exclude and exclude(fn):
+            continue
         if cat1_centre is not None:
             s = evaluate_fixed_cat1(answers, truth, cat1_centre, cat1_radius)
         else:
@@ -394,19 +400,42 @@ def search_one(answers, truth, verbose=False):
 def test_ensembles(filename_gen, ensemble_size, truth,
                    cutoff=14, replace=False, randomise=False,
                    epoch_from_filename=False,
-                   cat1_centre=None, cat1_radius=0):
+                   cat1_centre=None, cat1_radius=0,
+                   include=always, exclude=never):
     answers_gen = answers_generator(filename_gen, truth,
                                     epoch_from_filename, False)
 
-    scores = get_sorted_scores(answers_gen, truth, cat1_centre, cat1_radius)
+    scores = get_sorted_scores(answers_gen, truth, cat1_centre, cat1_radius,
+                               exclude)
+
     if randomise:
         random.shuffle(scores)
 
     singles = {}
-    for _, fn in sorted(scores[:cutoff]):
+    essentials = set()
+    single_lines = []
+    if include is not always:
+        for _, fn in scores:
+            if include(fn):
+                shortname = get_shortname(fn)
+                singles[shortname] = read_answers_file(fn)
+                cutoff -= 1
+                single_lines.append((_[0], shortname))
+                essentials.add(shortname)
+
+    for _, fn in scores[:cutoff]:
         shortname = get_shortname(fn)
         singles[shortname] = read_answers_file(fn)
-        print "%s %.3f" % (shortname, _[0])
+        single_lines.append((_[0], shortname))
+
+    coloured = {k: '%s%s%s' % (v, k, colour.C_NORMAL) for k, v in
+                zip(singles, colour.spectra['warm'])}
+
+    prev = None
+    for score, shortname in sorted(single_lines):
+        if shortname != prev:
+            print "%s %.3f" % (coloured[shortname], score)
+            prev = shortname
 
     ensembles = []
     if replace:
@@ -416,6 +445,9 @@ def test_ensembles(filename_gen, ensemble_size, truth,
 
     for names in combos(singles.keys(), ensemble_size):
         ensemble = {}
+        if essentials and not essentials.intersection(names):
+            continue
+
         for n in names:
             answers = singles.get(n)
             for k, v in answers.items():
@@ -436,9 +468,10 @@ def test_ensembles(filename_gen, ensemble_size, truth,
     centre_sum = 0.0
     centre_sum2 = 0.0
 
+
     for i, x in enumerate(ensembles):
         c, names = x
-        name = '-'.join(names)
+        name = '-'.join(coloured[x] for x in names)
         n = len(set(names))
         if n == 1:
             _colour = colour.RED
@@ -452,14 +485,15 @@ def test_ensembles(filename_gen, ensemble_size, truth,
         centre_sum += centre
         centre_sum2 += centre * centre
 
-        print "%s%s%s %.3f auc %.3f c@1 %.3f centre %.2f" % (_colour,
-                                                             name,
-                                                             colour.C_NORMAL,
+        print "%s%s %.3f auc %.3f c@1 %.3f centre %.2f%s" % (name,
+                                                             _colour,
                                                              c[0], c[2], c[1],
-                                                             centre)
+                                                             centre,
+                                                             colour.C_NORMAL)
+    n = max(1, len(ensembles))
 
-    centre_mean = centre_sum / len(ensembles)
-    centre_dev = max(0, (centre_sum2 / len(ensembles) -
+    centre_mean = centre_sum / n
+    centre_dev = max(0, (centre_sum2 / n -
                          centre_mean * centre_mean)) ** 0.5
     print "%scentre %.3f±%.3f%s" % (colour.YELLOW, centre_mean, centre_dev,
                                     colour.C_NORMAL)
