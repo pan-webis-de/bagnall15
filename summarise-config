@@ -140,14 +140,17 @@ def main():
         results = get_score_for_lang(lang, accept_corpus,
                                      args.cat1_centre, args.cat1_radius)
         results.sort()
-        seen_results = set()
+        seen_results = {}
         for c, commit, date, config in results[-args.number_of_results:]:
             pruned_config = ' '.join(prune_config(config, commit))
             sig = (c[0], pruned_config)
             if sig in seen_results:
-                print "%sduplicate%s" % (colour.YELLOW, colour.C_NORMAL)
+                print "%s%s duplicates %s%s" % (colour.YELLOW,
+                                                commit,
+                                                seen_results[sig],
+                                                colour.C_NORMAL)
                 continue
-            seen_results.add(sig)
+            seen_results[sig] = commit
             print "%.3f %s %s" % (c[0], commit, pruned_config)
 
 
