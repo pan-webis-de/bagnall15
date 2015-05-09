@@ -405,6 +405,8 @@ def main():
                         help="add extra documents from here")
     parser.add_argument('--try-swapping-texts', action='store_true',
                         help="if known text is short, train on unknown text")
+    parser.add_argument('--swap-corpora', action='store_true',
+                        help="train with test text (implies --concat-texts)")
     parser.add_argument('--reverse', action='store_true',
                         help="learn and process all texts in reverse")
     parser.add_argument('--concat-texts', action='store_true',
@@ -456,14 +458,18 @@ def main():
                  "presynaptic_noise"):
             net_kwargs[k] = v
 
+    concat_texts = args.concat_texts or args.swap_corpora
     net, training_texts, test_texts = get_net_and_corpus(args.srcdir,
                                                          remap, accept_fn,
                                                          args.control_corpus,
                                                          args.reverse,
-                                                         args.concat_texts,
+                                                         concat_texts,
                                                          **net_kwargs)
     if args.try_swapping_texts:
         maybe_swap_texts(training_texts, test_texts)
+
+    if args.swap_corpora:
+        training_texts, test_texts = test_texts, training_texts
 
     if args.raw_answers_trace is not None:
         def trace(i):
