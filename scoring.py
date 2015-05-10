@@ -302,7 +302,7 @@ def get_indicator_scores(results):
 
 
 def get_sorted_scores(answers_gen, truth, cat1_centre=None, cat1_radius=0,
-                      exclude=None):
+                      exclude=None, epoch_from_filename=False):
     scores = []
     for fn, answers in answers_gen:
         if exclude and exclude(fn):
@@ -311,7 +311,7 @@ def get_sorted_scores(answers_gen, truth, cat1_centre=None, cat1_radius=0,
             s = evaluate_fixed_cat1(answers, truth, cat1_centre, cat1_radius)
         else:
             s = search_for_centre(answers, truth)
-        scores.append((s[0], fn))
+        scores.append((s[0], fn, get_shortname(fn, epoch_from_filename)))
     scores.sort()
     scores.reverse()
     return scores
@@ -374,7 +374,8 @@ def search_commits(filename_gen, truth, n=8, epoch_from_filename=False,
             notable_commits.add(v[0][1])
 
     else:
-        notable_commits = get_sorted_scores(answers_gen, truth)[:n]
+        notable_commits = (x[2] for x in
+                           get_sorted_scores(answers_gen, truth))
 
     for name in notable_commits:
         print name
@@ -406,7 +407,7 @@ def test_ensembles(filename_gen, ensemble_size, truth,
                                     epoch_from_filename, False)
 
     scores = get_sorted_scores(answers_gen, truth, cat1_centre, cat1_radius,
-                               exclude)
+                               exclude, epoch_from_filename=epoch_from_filename)
 
     if randomise:
         random.shuffle(scores)
@@ -415,18 +416,16 @@ def test_ensembles(filename_gen, ensemble_size, truth,
     essentials = set()
     single_lines = []
     if include is not always:
-        for _, fn in scores:
-            if include(fn):
-                shortname = get_shortname(fn)
+        for c, fn, shortname in scores:
+            if include(shortname):
                 singles[shortname] = read_answers_file(fn)
                 cutoff -= 1
-                single_lines.append((_[0], shortname))
+                single_lines.append((c[0], shortname))
                 essentials.add(shortname)
 
-    for _, fn in scores[:cutoff]:
-        shortname = get_shortname(fn)
+    for c, fn, shortname in scores[:cutoff]:
         singles[shortname] = read_answers_file(fn)
-        single_lines.append((_[0], shortname))
+        single_lines.append((c[0], shortname))
 
     coloured = {k: '%s%s%s' % (v, k, colour.C_NORMAL) for k, v in
                 zip(singles, colour.SPECTRUM)}
@@ -468,10 +467,9 @@ def test_ensembles(filename_gen, ensemble_size, truth,
     centre_sum = 0.0
     centre_sum2 = 0.0
 
-
     for i, x in enumerate(ensembles):
         c, names = x
-        name = '-'.join(coloured[x] for x in names)
+        name = '|'.join(coloured[x] for x in names)
         n = len(set(names))
         if n == 1:
             _colour = colour.RED
