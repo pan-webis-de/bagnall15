@@ -168,14 +168,14 @@ def search_for_centre(answers, truth):
     best_candidate = (0,)
 
     for i, roc_data in enumerate(roc_trail):
-        score, positives, negatives = roc_data
+        raw_score, positives, negatives = roc_data
         true_positives -= positives
         n_undecided = positives + negatives
         n_correct = true_positives + true_negatives
         cat1 = (n_correct + n_undecided * n_correct * scale) * scale
         score = cat1 * auc
         if score > best_candidate[0]:
-            best_candidate = (score, cat1, auc, i, i, score, score,
+            best_candidate = (score, cat1, auc, i, i, raw_score, raw_score,
                               n_undecided, n_correct, true_positives,
                               true_negatives)
         true_negatives += negatives
