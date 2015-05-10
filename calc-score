@@ -38,6 +38,8 @@ def main():
                               "disambiguate commits with it"))
     parser.add_argument('-E', '--test-ensembles', type=int,
                         help="test ensembles of this size")
+    parser.add_argument('-Z', '--ensemble-sample-size', type=int, default=14,
+                        help="sample ensembles from this many candidates")
     parser.add_argument('--include-revisions',
                         help="include these revisions in ensemble "
                         "(space seperated regexes)")
@@ -83,6 +85,7 @@ def main():
                 exclude = compile_include_revisions(args.exclude_revisions)
 
             test_ensembles(filename_gen, args.test_ensembles,
+                           cutoff=args.ensemble_sample_size,
                            truth=truth, randomise=args.randomise,
                            epoch_from_filename=args.epoch_from_filename,
                            cat1_centre=args.cat1_centre,
