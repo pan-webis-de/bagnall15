@@ -481,7 +481,7 @@ def test_ensembles(filename_gen, ensemble_size, truth,
             _colour = colour.C_NORMAL
         if i == len(ensembles) // 2:
             _colour = colour.MAGENTA
-        centre = c[5]
+        centre = (c[5] + c[6]) * 0.5
         centre_sum += centre
         centre_sum2 += centre * centre
 
