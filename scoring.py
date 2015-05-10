@@ -340,7 +340,7 @@ def search_answer_files(filename_gen, truth, epoch_from_filename=False):
     top_scores = get_indicator_scores(results)
 
     colour_map = {t[1]: c for c, t
-                  in zip(colour.spectra['warm'], top_scores)}
+                  in zip(colour.SPECTRUM, top_scores)}
 
     for score, name in top_scores:
         print "%s%s %.3f%s" % (colour_map.get(name, ''), name, score,
@@ -429,7 +429,7 @@ def test_ensembles(filename_gen, ensemble_size, truth,
         single_lines.append((_[0], shortname))
 
     coloured = {k: '%s%s%s' % (v, k, colour.C_NORMAL) for k, v in
-                zip(singles, colour.spectra['warm'])}
+                zip(singles, colour.SPECTRUM)}
 
     prev = None
     for score, shortname in sorted(single_lines):

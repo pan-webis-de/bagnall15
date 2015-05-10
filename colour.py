@@ -18,17 +18,19 @@ WHITE       = "\033[01;37m"
 REV_RED     = "\033[01;41m"
 
 _FOREGROUND = "\033[38;5;%sm"
+_BACKGROUND = "\033[48;5;%sm"
 
+_spectrum = (range(160, 196, 6) +
+             range(226, 190, -6) +
+             range(124, 128, 1) +
+             range(128, 164, 6) +
+             range(122, 90, -6) +
+             range(91, 88, -1) +
+             range(161, 166, 1) +
+             range(201, 196, -1) +
+             range(201, 196, -1) +
+             range(130, 160, 6) +
+             range(118, 88, -6))
 
-def generate_spectrum(starts, step=6, n=6):
-    spectrum = []
-    for start in starts:
-        end = start + step * n
-        spectrum.extend(_FOREGROUND % x for x in range(start, end, step))
-    return spectrum
-
-spectra = {k: generate_spectrum(x) for k, x
-           in (('warm', (160, 196, 21, 57)),
-               ('darkwarm', (88, 124)),
-               ('bluegreen', (17, 53)),
-           )}
+SPECTRUM = [_FOREGROUND % x for x in _spectrum]
+BACKGROUND_SPECTRUM = [_BACKGROUND % x for x in _spectrum]
