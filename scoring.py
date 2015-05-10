@@ -427,8 +427,10 @@ def test_ensembles(filename_gen, ensemble_size, truth,
         singles[shortname] = read_answers_file(fn)
         single_lines.append((c[0], shortname))
 
+    cstep = len(colour.SPECTRUM) / len(singles)
+    spectrum = (x for i, x in enumerate(colour.SPECTRUM) if not i % cstep)
     coloured = {k: '%s%s%s' % (v, k, colour.C_NORMAL) for k, v in
-                zip(singles, colour.SPECTRUM)}
+                zip(singles, spectrum)}
 
     prev = None
     for score, shortname in sorted(single_lines):
