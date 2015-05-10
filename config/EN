@@ -1,0 +1,2 @@
+-l1.4e-1 -L-1 --leakage-decay=0.9  -H79 -e6
+-l2e-1 -L-1 --leakage-decay=0.8  -H99 -e5 --presynaptic-noise=0.0

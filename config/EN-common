@@ -1,0 +1,1 @@
+--control-corpus corpus/control/EN -M en --batch-size=40 -d70

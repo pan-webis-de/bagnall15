@@ -155,14 +155,18 @@ def write_pan_results(net, filename, ignore_start, test_texts,
             s = 0.49 - step * (x - cat1_bottom)
         score_map.append(s)
 
-    f = open(filename, 'w')
+    if filename == '-':
+        f = sys.stdout
+    else:
+        f = open(filename, 'w')
     for name, index in zip(net.class_names, indices):
         if raw:
             score = 1.0 - float(index) / net.n_classes
         else:
             score = score_map[index]
         print >> f, "%s %.3f" % (name, score)
-    f.close()
+    if f is not sys.stdout:
+        f.close()
 
 
 def no_answer(*args):
@@ -417,7 +421,7 @@ def main():
     parser.add_argument('--pan-answers',
                         help="write answers here in the style expected by PAN")
     parser.add_argument('--raw-answers',
-                        help="write answers here not adjusted for c@1")
+                        help="write answers here not adjusted for c@1 (- for stdout)")
     parser.add_argument('--raw-answers-trace',
                         help=("write raw answers after every epoch "
                               "(put %d in name)"))
@@ -480,7 +484,7 @@ def main():
     else:
         trace = None
 
-    if args.pan_answers:
+    if args.pan_answers or args.raw_answers:
         if args.balanced_training:
             train_silently_balanced(net, training_texts, args.leakage,
                                     args.sub_epochs, args.leakage_decay,
@@ -492,8 +496,9 @@ def main():
                            args.learn_rate_decay, args.ignore_start,
                            trace=trace)
 
-        write_pan_results(net, args.pan_answers, args.ignore_start, test_texts,
-                          args.pan_hedge)
+        if args.pan_answers:
+            write_pan_results(net, args.pan_answers, args.ignore_start, test_texts,
+                              args.pan_hedge)
         if args.raw_answers:
             write_pan_results(net, args.raw_answers, args.ignore_start,
                               test_texts, args.pan_hedge, raw=True)

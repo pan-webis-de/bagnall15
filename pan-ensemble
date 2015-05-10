@@ -1,0 +1,62 @@
+#!/usr/bin/python
+import argparse
+import os
+import sys
+import subprocess
+from language import guess_directory_lang
+
+HERE = os.path.dirname(__file__)
+
+CMD = './train-net --ignore-start=10 --raw-answers=-'.split()
+
+def get_commands(lang, input_dir):
+    commands = []
+    f = open('config/%s-common' % lang)
+    cmd = CMD + f.read().split()
+    f.close()
+    f = open('config/%s' % lang)
+    for line in f:
+        line = line.strip()
+        if line and not line[0] == '#':
+            commands.append(cmd + line.split() + [input_dir])
+    return commands
+
+
+def aggregate_results(commands):
+    results = {}
+    for command in commands:
+        try:
+            print >> sys.stderr, "running %s" % (' '.join(command))
+            r = subprocess.check_output(command).strip()
+        except subprocess.CalledProcessError, e:
+            print >> sys.stderr, e
+            continue
+        for line in r.split('\n'):
+            k, v = line.split()
+            results.setdefault(k, []).append(float(v))
+    aggregated = {}
+    for k, v in results.items():
+        aggregated[k] = sum(v) / len(v)
+    return aggregated
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--input-dir', help="find testing corpus here")
+    parser.add_argument('-o', '--output-dir', help="write results here")
+
+    args = parser.parse_args()
+
+    lang = guess_directory_lang(args.input_dir)
+    print >> sys.stderr, "using %s config" % lang
+
+    commands = get_commands(lang, args.input_dir)
+    results = aggregate_results(commands)
+
+    fn = os.path.join(args.output_dir, "answers.txt")
+    f = open(fn, 'w')
+    for k, v in sorted(results.items()):
+        print >>f, "%s %.3f" % (k, v)
+    f.close()
+
+main()
