@@ -7,7 +7,7 @@ from language import read_answers_file
 import itertools
 import random
 import subprocess
-
+import os
 
 def simple_file_gen(file_pattern):
     for fn in glob.glob(file_pattern):
@@ -16,16 +16,24 @@ def simple_file_gen(file_pattern):
 
 # corpus changed in early may. I'm calling them versions 3 and 4
 # because those appear in the filenames. (as months)
+_version_cache = {}
 def uses_corpus_version(n, path):
-    commit_id = get_shortname(path)
-    if n == 3:
-        cmd = ['git', 'rev-list', '--before=2015-05-07',
-               '--count', '%s..ccf6f6679' % commit_id]
-    elif n == 4:
-        cmd = ['git', 'rev-list',  '--since=2015-05-07',
-               '--count', 'ccf6f6679..%s' % commit_id]
-    s = subprocess.check_output(cmd)
-    return int(s)
+    dirname, lang = os.path.split(os.path.dirname(path))
+    version = _version_cache.get(dirname)
+    if version is None:
+        try:
+            fn = '%s/stderr-%s.log' % (dirname, lang)
+            f = open(fn)
+            for line in f:
+                if line[:7] == 'running':
+                    m = re.search(r'2015-0(\d)-\d\d', line)
+                    if m:
+                        version = int(m.group(1))
+                    break
+            _version_cache[dirname] = version
+        except IOError, e:
+            print e
+    return version == n
 
 
 def versioned_file_gen(file_pattern, version):
@@ -36,6 +44,7 @@ def versioned_file_gen(file_pattern, version):
 
 def always(x):
     return True
+
 
 def never(x):
     return False
