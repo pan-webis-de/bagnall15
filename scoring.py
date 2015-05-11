@@ -432,13 +432,16 @@ def test_ensembles(filename_gen, ensemble_size, truth,
                 single_lines.append((c[0], shortname))
                 essentials.add(shortname)
 
+    if cutoff < 0:
+        cutoff = 0
+
     for c, fn, shortname in scores[:cutoff]:
         singles[shortname] = read_answers_file(fn)
         single_lines.append((c[0], shortname))
 
     cstep = len(colour.SPECTRUM) / len(singles)
     spectrum = (x for i, x in enumerate(colour.SPECTRUM) if not i % cstep)
-    coloured = {k: '%s%s%s' % (v, k, colour.C_NORMAL) for k, v in
+    coloured = {k: '%s%-10s%s' % (v, k, colour.C_NORMAL) for k, v in
                 zip(singles, spectrum)}
 
     prev = None
