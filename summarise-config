@@ -4,7 +4,8 @@ import os
 import argparse
 from language import read_truth_file, read_answers_file
 from scoring import search_for_centre, evaluate_fixed_cat1
-from scoring import regex_filter, always
+from scoring import regex_filter, always, get_shortname, never
+from scoring import versioned_file_gen, simple_file_gen
 import subprocess
 import colour
 
@@ -56,55 +57,95 @@ def prune_config(config, commit):
 
 def get_truth_map(lang):
     map = {}
-    for date in ('2015-03-02', '2015-04-19'):
+    for v, date in ((3,'2015-03-02'), (4, '2015-04-19')):
         fn = os.path.join(HERE, ("corpus/pan15-authorship-verification-"
                                  "training-dataset-%s-%s/truth.txt" %
                                  (lang, date)))
         truth = read_truth_file(fn)
-        map[date] = truth
+        map[v] = truth
     return map
 
 
-def get_score_for_lang(lang, accept_corpus=always,
-                       cat1_centre=None, cat1_radius=0):
+def read_config(fn):
+    f = open(fn)
+    for line in f:
+        if line.startswith('running ./train-net'):
+            break
+    else:
+        f.close()
+        return None
+    f.close()
+    commit = get_shortname(fn)
+    config = line.split()[2:]
+    for x in config:
+        if 'pan15-authorship-verification-training-dataset-' in x:
+            date = x[-10:]
+            version = {'2015-03-02': 3,
+                       '2015-04-19': 4}.get(date)
+    return commit, version, config
+
+
+def get_score_for_lang(lang, corpus_version_constraint=None,
+                       cat1_centre=None, cat1_radius=0,
+                       after_each_epoch=False, exclude_config=None,
+                       include_config=None):
     truth_map = get_truth_map(lang)
 
+    if after_each_epoch:
+        file_pattern = '*/%s/raw-answers-*.txt' % lang
+    else:
+        file_pattern = '*/%s/raw-answers.txt' % lang
+
+    if corpus_version_constraint:
+        filenames = versioned_file_gen(file_pattern, corpus_version_constraint)
+    else:
+        filenames = simple_file_gen(file_pattern)
+
+    skip, insist = never, always
+    if exclude_config:
+        skip = re.compile(exclude_config).search
+    if include_config:
+        insist = re.compile(include_config).search
+
+    dir_config = {}
     results = []
-    for d in os.listdir(HERE):
-        fn = os.path.join(HERE, d, lang, 'raw-answers.txt')
-        try:
-            answers = read_answers_file(fn)
-        except IOError:
+    for fn in filenames:
+        d = os.path.dirname(fn)
+        config = dir_config.get(d)
+        if config is None:
+            config = read_config(os.path.join(HERE, d, '../stderr-%s.log' % lang))
+            dir_config[d] = config
+        commit, version, cmdline = config
+
+        cmd_string = ' '.join(cmdline)
+        if skip(cmd_string) or not insist(cmd_string):
             continue
 
-        f = open(os.path.join(HERE, d, 'stderr-%s.log' % lang))
-        for line in f:
-            if line.startswith('running ./train-net'):
-                break
-        else:
-            f.close()
-            continue
-        f.close()
+        answers = read_answers_file(fn)
+        truth = truth_map[version]
 
-        config = line.split()[2:]
-        for x in config:
-            if 'pan15-authorship-verification-training-dataset-' in x:
-                if not accept_corpus(x):
-                    continue
-                date = x[-10:]
-                break
-        else:
-            # did not break, thus no acceptable corpus
-            continue
-
-        truth = truth_map[date]
         if cat1_centre is None:
             score, _, _ = search_for_centre(answers, truth)
         else:
             score, _, _ = evaluate_fixed_cat1(answers, truth,
                                               cat1_centre, cat1_radius)
-        commit = d[8:]
-        results.append((score, commit, date, config))
+        if after_each_epoch:
+            commit_id = get_shortname(fn, True)
+            cmdline = cmdline[:]
+            for i, x in enumerate(cmdline):
+                if x[:2] == '-e':
+                    epoch = commit_id.split('-')[1]
+                    if len(x) == 2:
+                        cmdline[i] = '%s-e' % colour.CYAN
+                        cmdline[i + 1] = '%s%s' % (epoch, colour.C_NORMAL)
+                    if len(x) > 2:
+                        cmdline[i] = '%s-e%s%s' % (colour.CYAN,
+                                                   epoch, colour.C_NORMAL)
+                    break
+        else:
+            commit_id = commit
+
+        results.append((score, commit, commit_id, version, cmdline))
 
     return results
 
@@ -113,15 +154,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('languages', nargs='*',
                         help="languages to process")
-    parser.add_argument('--corpus-regex',
-                        help="restrict corpus with regex (try 03, 04)")
+    parser.add_argument('--corpus-version', type=int,
+                        help="restrict corpus to this version (3 or 4)")
     parser.add_argument('-n', '--number-of-results', type=int, default=10,
                         help="show only this many results")
     parser.add_argument('--cat1-centre', type=float, default=None,
                         help="use this as c@1 centre")
     parser.add_argument('--cat1-radius', type=float, default=0,
                         help="use this as c@1 centre")
-
+    parser.add_argument('-e', '--after-each-epoch', action="store_true",
+                        help=("if available, show score after each epoch"))
+    parser.add_argument('-x', '--exclude-config',
+                        help=("don't show lines with config matching this"))
+    parser.add_argument('-i', '--include-config',
+                        help=("only show lines with config matching this"))
 
     args = parser.parse_args()
 
@@ -131,27 +177,29 @@ def main():
         ('greek', 'GR'),
         ('dutch', 'DU'),
     ]
-    accept_corpus = regex_filter(args.corpus_regex)
-
     for lang, code in LANG_CONFIG:
         if args.languages and lang not in args.languages:
             continue
         print "\n%s%s%s" % (colour.GREEN, lang, colour.C_NORMAL)
-        results = get_score_for_lang(lang, accept_corpus,
-                                     args.cat1_centre, args.cat1_radius)
+        results = get_score_for_lang(lang, args.corpus_version,
+                                     args.cat1_centre, args.cat1_radius,
+                                     args.after_each_epoch,
+                                     args.exclude_config,
+                                     args.include_config)
         results.sort()
         seen_results = {}
-        for c, commit, date, config in results[-args.number_of_results:]:
+        for c, commit, commit_id, version, config in results[-args.number_of_results:]:
             pruned_config = ' '.join(prune_config(config, commit))
             sig = (c[0], pruned_config)
             if sig in seen_results:
                 print "%s%s duplicates %s%s" % (colour.YELLOW,
-                                                commit,
+                                                commit_id,
                                                 seen_results[sig],
                                                 colour.C_NORMAL)
                 continue
-            seen_results[sig] = commit
-            print "%.3f %s %s" % (c[0], commit, pruned_config)
+            seen_results[sig] = commit_id
+            s = "%.3f %s" % (c[0], commit_id)
+            print "%-16s %s" % (s, pruned_config)
 
 
 main()
