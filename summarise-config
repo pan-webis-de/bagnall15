@@ -14,9 +14,16 @@ HERE = os.path.dirname(__file__)
 
 # presynaptic noise was broken until c34d2535
 def does_psn_work(commit_id):
-    s = subprocess.check_output(['git', 'rev-list', '--count',
-                                 'c34d25351..%s' % commit_id])
-    return int(s)
+    try:
+        f = open(os.devnull, 'w')
+        s = subprocess.check_output(['git', 'rev-list', '--count',
+                                     'c34d25351..%s' % commit_id],
+                                    stderr=f)
+        f.close()
+        return int(s)
+    except subprocess.CalledProcessError:
+        #directories with no commit are newer.
+        return True
 
 
 def prune_config(config, commit):
