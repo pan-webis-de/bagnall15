@@ -10,17 +10,6 @@ from scoring import calc_auc, calc_cat1, search_answer_files,\
     simple_file_gen, versioned_file_gen, always, never
 
 
-def compile_include_revisions(include_revisions):
-    patterns = include_revisions.split()
-    searches = [re.compile(x).search for x in patterns]
-    def accept(s):
-        for x in searches:
-            if x(s):
-                return True
-        return False
-    return accept
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--answer-file', help="read scores from here")
@@ -65,7 +54,6 @@ def main():
                 args.corpus_version = int(m.group(1))
             else:
                 args.corpus_version = 0
-        print args.corpus_version
         if args.corpus_version:
             filename_gen = versioned_file_gen(args.answer_file_pattern,
                                               args.corpus_version)
@@ -80,9 +68,9 @@ def main():
         elif args.test_ensembles:
             include, exclude = always, never
             if args.include_revisions:
-                include = compile_include_revisions(args.include_revisions)
+                include = set(args.include_revisions.split()).__contains__
             if args.exclude_revisions:
-                exclude = compile_include_revisions(args.exclude_revisions)
+                exclude = set(args.exclude_revisions.split()).__contains__
 
             test_ensembles(filename_gen, args.test_ensembles,
                            cutoff=args.ensemble_sample_size,
