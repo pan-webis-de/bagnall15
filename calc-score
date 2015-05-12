@@ -6,9 +6,10 @@ import re
 from language import read_truth_file, read_answers_file
 
 from scoring import calc_auc, calc_cat1, search_answer_files,\
-    search_commits, search_one, test_ensembles, regex_filter, \
+    search_commits, search_one, regex_filter, \
     simple_file_gen, versioned_file_gen, always, never
 
+from scoring import generate_ensembles, print_ensembles, print_ensemble_usefulness
 
 def main():
     parser = argparse.ArgumentParser()
@@ -29,6 +30,10 @@ def main():
                         help="test ensembles of this size")
     parser.add_argument('-Z', '--ensemble-sample-size', type=int, default=14,
                         help="sample ensembles from this many candidates")
+    parser.add_argument('-u', '--ensemble-usefulness', action='store_true',
+                        help="print ensemble member usefulness, not ensemble")
+    parser.add_argument('-i', '--ensemble-iterations', type=int, default=1,
+                        help="run this many times to determine usefulness")
     parser.add_argument('--include-revisions',
                         help="include these revisions in ensemble "
                         "(space seperated regexes)")
@@ -72,13 +77,21 @@ def main():
             if args.exclude_revisions:
                 exclude = set(args.exclude_revisions.split()).__contains__
 
-            test_ensembles(filename_gen, args.test_ensembles,
-                           cutoff=args.ensemble_sample_size,
-                           truth=truth, randomise=args.randomise,
-                           epoch_from_filename=args.epoch_from_filename,
-                           cat1_centre=args.cat1_centre,
-                           cat1_radius=args.cat1_radius,
-                           include=include, exclude=exclude)
+            ensemble_data = generate_ensembles(filename_gen,
+                                               args.test_ensembles,
+                                               cutoff=args.ensemble_sample_size,
+                                               truth=truth,
+                                               randomise=args.randomise,
+                                               epoch_from_filename=args.epoch_from_filename,
+                                               cat1_centre=args.cat1_centre,
+                                               cat1_radius=args.cat1_radius,
+                                               include=include,
+                                               exclude=exclude,
+                                               iterations=args.ensemble_iterations)
+            if args.ensemble_usefulness:
+                print_ensemble_usefulness(ensemble_data)
+            else:
+                print_ensembles(*ensemble_data[0])
         else:
             if args.cat1_centre:
                 print "--cat1-centre doesn't apply in this mode"

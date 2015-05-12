@@ -417,42 +417,124 @@ def search_one(answers, truth, verbose=False):
     return indicators
 
 
-def test_ensembles(filename_gen, ensemble_size, truth,
-                   cutoff=14, replace=False, randomise=False,
-                   epoch_from_filename=False,
-                   cat1_centre=None, cat1_radius=0,
-                   include=always, exclude=never):
+def generate_ensembles(filename_gen, ensemble_size, truth,
+                       cutoff=14, replace=False, randomise=False,
+                       epoch_from_filename=False,
+                       cat1_centre=None, cat1_radius=0,
+                       include=always, exclude=never, iterations=1):
     answers_gen = answers_generator(filename_gen, truth,
                                     epoch_from_filename, False)
 
     scores = get_sorted_scores(answers_gen, truth, cat1_centre, cat1_radius,
                                exclude, epoch_from_filename=epoch_from_filename)
+    results = []
+    for i in range(iterations):
+        if randomise:
+            random.shuffle(scores)
 
-    if randomise:
-        random.shuffle(scores)
+        singles = {}
+        essentials = set()
+        single_lines = []
+        if include is not always:
+            for c, fn, shortname in scores:
+                if include(shortname):
+                    singles[shortname] = read_answers_file(fn)
+                    cutoff -= 1
+                    single_lines.append((c[0], shortname))
+                    essentials.add(shortname)
 
-    singles = {}
-    essentials = set()
-    single_lines = []
-    if include is not always:
-        for c, fn, shortname in scores:
-            if include(shortname):
-                singles[shortname] = read_answers_file(fn)
-                cutoff -= 1
-                single_lines.append((c[0], shortname))
-                essentials.add(shortname)
+        if cutoff < 0:
+            cutoff = 0
 
-    if cutoff < 0:
-        cutoff = 0
+        for c, fn, shortname in scores[:cutoff]:
+            singles[shortname] = read_answers_file(fn)
+            single_lines.append((c[0], shortname))
 
-    for c, fn, shortname in scores[:cutoff]:
-        singles[shortname] = read_answers_file(fn)
-        single_lines.append((c[0], shortname))
+        ensembles = []
+        if replace:
+            combos = itertools.combinations_with_replacement
+        else:
+            combos = itertools.combinations
 
-    cstep = len(colour.SPECTRUM) / len(singles)
+        for names in combos(singles.keys(), ensemble_size):
+            ensemble = {}
+            if essentials and not essentials.intersection(names):
+                continue
+
+            for n in names:
+                answers = singles.get(n)
+                for k, v in answers.items():
+                    score = ensemble.get(k, 0.0)
+                    ensemble[k] = score + v
+            for k, v in ensemble.items():
+                ensemble[k] = v / ensemble_size
+
+            if cat1_centre is None:
+                centre = search_for_centre(ensemble, truth)
+            else:
+                centre = evaluate_fixed_cat1(ensemble, truth, cat1_centre,
+                                             cat1_radius)
+
+            ensembles.append((centre[0], names))
+
+        ensembles.sort()
+        results.append((single_lines, singles, ensembles))
+
+    return results
+
+def get_colour_spectrum(names):
+    n_pattern = '%%s%%-%ds%%s' % max(len(x) for x in names)
+    cstep = len(colour.SPECTRUM) / len(names)
     spectrum = (x for i, x in enumerate(colour.SPECTRUM) if not i % cstep)
-    coloured = {k: '%s%-10s%s' % (v, k, colour.C_NORMAL) for k, v in
-                zip(singles, spectrum)}
+    coloured = {k: n_pattern % (v, k, colour.C_NORMAL) for k, v in
+                zip(names, spectrum)}
+    return coloured
+
+
+def calc_ensemble_usefulness(singles, ensembles):
+    counts = {k: 0 for k in singles}
+    scores = {k: 0.0 for k in singles}
+    overall_score = 0.0
+    for score, names in ensembles:
+        overall_score += score[0]
+        for name in names:
+            counts[name] += 1
+            scores[name] += score[0]
+
+    mean_score = overall_score / len(ensembles)
+    deltas = {}
+    for name, score in sorted(scores.items()):
+        deltas[name] = score / counts[name] - mean_score
+    return deltas
+
+
+def print_ensemble_usefulness(ensemble_data):
+    delta_sums = defaultdict(float)
+    delta_counts = defaultdict(int)
+    for single_lines, singles, ensembles in ensemble_data:
+        deltas = calc_ensemble_usefulness(singles, ensembles)
+        for k, v in deltas.items():
+            delta_sums[k] += v
+            delta_counts[k] += 1
+
+        coloured = get_colour_spectrum(deltas.keys())
+        if len(ensemble_data) == 1:
+            for name, delta in sorted(deltas.items(), key=lambda x: x[1]):
+                print "%s %+.3f" % (coloured[name], delta)
+
+    if len(ensemble_data) > 1:
+        print "RESULTS"
+        delta_means = []
+        for k, v in delta_sums.items():
+            c = delta_counts[k]
+            delta_means.append((v / c, c, k))
+
+        for score, count, name in sorted(delta_means):
+            print "%s %2d %+.3f" % (name, count, score)
+
+
+def print_ensembles(single_lines, singles, ensembles):
+    coloured = get_colour_spectrum(singles.keys())
 
     prev = None
     for score, shortname in sorted(single_lines):
@@ -460,44 +542,15 @@ def test_ensembles(filename_gen, ensemble_size, truth,
             print "%s %.3f" % (coloured[shortname], score)
             prev = shortname
 
-    ensembles = []
-    if replace:
-        combos = itertools.combinations_with_replacement
-    else:
-        combos = itertools.combinations
-
-    for names in combos(singles.keys(), ensemble_size):
-        ensemble = {}
-        if essentials and not essentials.intersection(names):
-            continue
-
-        for n in names:
-            answers = singles.get(n)
-            for k, v in answers.items():
-                score = ensemble.get(k, 0.0)
-                ensemble[k] = score + v
-        for k, v in ensemble.items():
-            ensemble[k] = v / ensemble_size
-
-        if cat1_centre is None:
-            centre = search_for_centre(ensemble, truth)
-        else:
-            centre = evaluate_fixed_cat1(ensemble, truth, cat1_centre,
-                                         cat1_radius)
-
-        ensembles.append((centre[0], names))
-
-    ensembles.sort()
     centre_sum = 0.0
     centre_sum2 = 0.0
-
     for i, x in enumerate(ensembles):
         c, names = x
         name = '|'.join(coloured[x] for x in names)
         n = len(set(names))
         if n == 1:
             _colour = colour.RED
-        elif n < ensemble_size:
+        elif n < len(names):
             _colour = colour.YELLOW
         else:
             _colour = colour.C_NORMAL
