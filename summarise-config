@@ -176,6 +176,8 @@ def main():
                         help=("don't show lines with config matching this"))
     parser.add_argument('-i', '--include-config',
                         help=("only show lines with config matching this"))
+    parser.add_argument('-S', '--sort-by-commit', action='store_true',
+                        help=("sort by commit id, not score"))
 
     args = parser.parse_args()
 
@@ -194,8 +196,10 @@ def main():
                                      args.after_each_epoch,
                                      args.exclude_config,
                                      args.include_config)
+
         results.sort()
         seen_results = {}
+        out = []
         for c, commit, commit_id, version, config in results[-args.number_of_results:]:
             pruned_config = ' '.join(prune_config(config, commit))
             sig = (c[0], pruned_config)
@@ -206,8 +210,12 @@ def main():
                                                 colour.C_NORMAL)
                 continue
             seen_results[sig] = commit_id
-            s = "%.3f %s" % (c[0], commit_id)
-            print "%-16s %s" % (s, pruned_config)
+            out.append((c[0], commit_id, pruned_config))
 
+        if args.sort_by_commit:
+            out.sort(key=lambda x: (x[1][:x[1].find('-')], x[0]))
+
+        for score, commit_id, pruned_config in out:
+            print "%.3f %-11s %s" % (score, commit_id, pruned_config)
 
 main()
