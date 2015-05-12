@@ -7,7 +7,8 @@ from scoring import search_for_centre, evaluate_fixed_cat1
 from scoring import regex_filter, always, get_shortname, never
 from scoring import versioned_file_gen, simple_file_gen
 import subprocess
-import colour
+
+from scoring import colour
 
 HERE = os.path.dirname(__file__)
 

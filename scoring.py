@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import colour
 import glob
 from collections import defaultdict
 import re
@@ -8,6 +7,17 @@ import itertools
 import random
 import subprocess
 import os
+import sys
+
+if sys.stdout.isatty():
+    import colour
+else:
+    class EmptyThing(object):
+        def __getattr__(self, k):
+            return ''
+
+    colour = EmptyThing()
+
 
 def simple_file_gen(file_pattern):
     for fn in glob.glob(file_pattern):
