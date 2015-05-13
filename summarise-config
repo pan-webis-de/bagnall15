@@ -6,61 +6,11 @@ from language import read_truth_file, read_answers_file
 from scoring import search_for_centre, evaluate_fixed_cat1
 from scoring import regex_filter, always, get_shortname, never
 from scoring import versioned_file_gen, simple_file_gen
+from scoring import prune_config, read_config, fix_config_epoch
 import subprocess
-
 from scoring import colour
 
 HERE = os.path.dirname(__file__)
-
-
-# presynaptic noise was broken until c34d2535
-def does_psn_work(commit_id):
-    try:
-        f = open(os.devnull, 'w')
-        s = subprocess.check_output(['git', 'rev-list', '--count',
-                                     'c34d25351..%s' % commit_id],
-                                    stderr=f)
-        f.close()
-        return int(s)
-    except subprocess.CalledProcessError:
-        #directories with no commit are newer.
-        return True
-
-
-def prune_config(config, commit):
-    pruned = []
-    skip = 0
-    replace = {'--control-corpus': ('CONTROL', 1)}
-
-    for x in config:
-        if skip:
-            skip -= 1
-            continue
-        if x in {'-M', '-n', '--pan-answers', '--raw-answers',
-                 '--raw-answers-trace'}:
-            skip = 1
-            continue
-        if x in replace:
-            r, skip = replace[x]
-            pruned.append(r)
-            continue
-        if x in {'-r8', '--pan-hedge=0.0', '--try-swapping-texts',
-                 '--activation=2', '--learning-method=4',
-                 '--ignore-start=10', '--batch-size=40'}:
-            continue
-        if x.startswith('corpus/pan15-authorship-verification-training-data'):
-            continue
-
-        if (x.startswith('--presynaptic-noise=') and
-            not does_psn_work(commit)):
-            continue
-
-        pruned.append(x)
-
-    if 'CONTROL' not in pruned:
-        pruned.append("%sNO-CONTROL%s" % (colour.RED, colour.C_NORMAL))
-
-    return pruned
 
 
 def get_truth_map(lang):
@@ -74,31 +24,7 @@ def get_truth_map(lang):
     return map
 
 
-def read_config(fn):
-    f = open(fn)
-    for line in f:
-        if line.startswith('running ./train-net'):
-            break
-    else:
-        f.close()
-        return None
-    f.close()
-    commit = get_shortname(fn)
-    config = line.split()[2:]
-    for x in config:
-        if 'pan15-authorship-verification-training-dataset-' in x:
-            date = x[-10:]
-            version = {'2015-03-02': 3,
-                       '2015-04-19': 4}.get(date)
-    return commit, version, config
-
-
-def get_score_for_lang(lang, corpus_version_constraint=None,
-                       cat1_centre=None, cat1_radius=0,
-                       after_each_epoch=False, exclude_config=None,
-                       include_config=None):
-    truth_map = get_truth_map(lang)
-
+def filename_gen(lang, corpus_version_constraint, after_each_epoch):
     if after_each_epoch:
         file_pattern = '*/%s/raw-answers-*.txt' % lang
     else:
@@ -108,6 +34,16 @@ def get_score_for_lang(lang, corpus_version_constraint=None,
         filenames = versioned_file_gen(file_pattern, corpus_version_constraint)
     else:
         filenames = simple_file_gen(file_pattern)
+    return filenames
+
+
+def get_score_for_lang(lang, corpus_version_constraint=None,
+                       cat1_centre=None, cat1_radius=0,
+                       after_each_epoch=False, exclude_config=None,
+                       include_config=None):
+    truth_map = get_truth_map(lang)
+
+    filenames = filename_gen(lang, corpus_version_constraint, after_each_epoch)
 
     skip, insist = never, always
     if exclude_config:
@@ -139,17 +75,8 @@ def get_score_for_lang(lang, corpus_version_constraint=None,
                                               cat1_centre, cat1_radius)
         if after_each_epoch:
             commit_id = get_shortname(fn, True)
-            cmdline = cmdline[:]
-            for i, x in enumerate(cmdline):
-                if x[:2] == '-e':
-                    epoch = commit_id.split('-')[1]
-                    if len(x) == 2:
-                        cmdline[i] = '%s-e' % colour.CYAN
-                        cmdline[i + 1] = '%s%s' % (epoch, colour.C_NORMAL)
-                    if len(x) > 2:
-                        cmdline[i] = '%s-e%s%s' % (colour.CYAN,
-                                                   epoch, colour.C_NORMAL)
-                    break
+            epoch = commit_id[commit_id.index('-') + 1:]
+            cmdline = fix_config_epoch(cmdline, epoch)
         else:
             commit_id = commit
 

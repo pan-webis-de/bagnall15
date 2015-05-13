@@ -24,6 +24,90 @@ def simple_file_gen(file_pattern):
         yield fn
 
 
+# presynaptic noise was broken until c34d2535
+def does_psn_work(commit_id):
+    try:
+        f = open(os.devnull, 'w')
+        s = subprocess.check_output(['git', 'rev-list', '--count',
+                                     'c34d25351..%s' % commit_id],
+                                    stderr=f)
+        f.close()
+        return int(s)
+    except subprocess.CalledProcessError:
+        #directories with no commit are newer.
+        return True
+
+
+def prune_config(config, commit):
+    pruned = []
+    skip = 0
+    flags = set()
+    for x in config:
+        if skip:
+            skip -= 1
+            continue
+        if x in {'-M', '-n', '--pan-answers', '--raw-answers',
+                 '--raw-answers-trace', '--control-corpus'}:
+            skip = 1
+            flags.add(x)
+            continue
+        if x in {'-r8', '--pan-hedge=0.0', '--try-swapping-texts',
+                 '--activation=2', '--learning-method=4',
+                 '--ignore-start=10', '--batch-size=40', '-d70'}:
+            continue
+        if x.startswith('corpus/pan15-authorship-verification-training-data'):
+            continue
+
+        if (x.startswith('--presynaptic-noise=') and
+            not does_psn_work(commit)):
+            continue
+
+        pruned.append(x)
+
+    if '--control-corpus' not in flags:
+        pruned.append("%s--no-control-corpus%s" % (colour.RED, colour.C_NORMAL))
+
+    return pruned
+
+
+def fix_config_epoch(orig_cmdline, epoch):
+    cmdline = orig_cmdline[:]
+    for i, x in enumerate(cmdline):
+        if x[:2] == '-e':
+            if len(x) == 2:
+                cmdline[i] = '-e'
+                cmdline[i + 1] = '%s' % epoch
+            if len(x) > 2:
+                cmdline[i] = '-e%s' % epoch
+            break
+    return cmdline
+
+
+def read_config(fn):
+    f = open(fn)
+    for line in f:
+        if line.startswith('running ./train-net'):
+            break
+    else:
+        f.close()
+        return None
+    f.close()
+    commit = get_shortname(fn)
+    config = line.split()[2:]
+    for x in config:
+        if 'pan15-authorship-verification-training-dataset-' in x:
+            date = x[-10:]
+            version = {'2015-03-02': 3,
+                       '2015-04-19': 4}.get(date)
+    return commit, version, config
+
+
+def read_config_from_shortname(lang, name):
+    if '-' in name:
+        name = name[:name.index('-')]
+    fn = 'answers-%s/stderr-%s.log' % (name, lang)
+    return read_config(fn)
+
 # corpus changed in early may. I'm calling them versions 3 and 4
 # because those appear in the filenames. (as months)
 _version_cache = {}
