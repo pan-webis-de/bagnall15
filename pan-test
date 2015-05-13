@@ -43,6 +43,8 @@ def main():
     parser.add_argument('-o', '--output-dir', help="write results here")
     parser.add_argument('--raw-answers', action="store_true",
                         help="also write results not adjusted for c@1")
+    parser.add_argument('--raw-answers-trace', action="store_true",
+                        help="write raw results after every epoch")
 
     args = parser.parse_args()
 
@@ -62,6 +64,9 @@ def main():
     if args.raw_answers:
         raw_output_filename = os.path.join(args.output_dir, "raw-answers.txt")
         cmd.extend(['--raw-answers', raw_output_filename])
+    if args.raw_answers_trace:
+        trace_pattern = os.path.join(args.output_dir, "raw-answers-%d.txt")
+        cmd.extend(['--raw-answers-trace', trace_pattern])
 
     print >> sys.stderr, "running %s" % (' '.join(cmd))
     subprocess.call(cmd)
