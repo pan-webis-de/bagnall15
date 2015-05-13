@@ -502,7 +502,7 @@ def search_one(answers, truth, verbose=False):
 
 
 def generate_ensembles(filename_gen, ensemble_size, truth,
-                       cutoff=14, replace=False, randomise=False,
+                       sample_size=14, replace=False, randomise=False,
                        epoch_from_filename=False,
                        cat1_centre=None, cat1_radius=0,
                        include=always, exclude=never, iterations=1):
@@ -512,10 +512,11 @@ def generate_ensembles(filename_gen, ensemble_size, truth,
     scores = get_sorted_scores(answers_gen, truth, cat1_centre, cat1_radius,
                                exclude, epoch_from_filename=epoch_from_filename)
     results = []
+
     for i in range(iterations):
         if randomise:
             random.shuffle(scores)
-
+        cutoff = sample_size
         singles = {}
         essentials = set()
         single_lines = []
