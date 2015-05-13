@@ -81,7 +81,7 @@ def main():
 
             ensemble_data = generate_ensembles(filename_gen,
                                                args.test_ensembles,
-                                               cutoff=args.ensemble_sample_size,
+                                               sample_size=args.ensemble_sample_size,
                                                truth=truth,
                                                randomise=args.randomise,
                                                epoch_from_filename=args.epoch_from_filename,
