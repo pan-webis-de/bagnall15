@@ -1,2 +1,39 @@
--l1.4e-1 -L-1 --leakage-decay=0.9  -H79 -e6
--l2e-1 -L-1 --leakage-decay=0.8  -H99 -e5 --presynaptic-noise=0.0
+-l1.4e-1 -L-2 --leakage-decay=0.7 -d70 -H119 -e22 --presynaptic-noise=0.1 --balanced-training
+-l1.4e-1 -L-3 --leakage-decay=0.7 --balanced-training -d70 -H99 -e32 --presynaptic-noise=0.0 --balanced-training CONTROL
+-l1.4e-1 -L-3 --leakage-decay=0.7 --balanced-training -d70 -H99 -e8 --presynaptic-noise=0.0 --balanced-training CONTROL
+-l2e-1 -L-50 --leakage-decay=0.707 -d70 -H179 -e34 --presynaptic-noise=0.3 CONTROL
+-l1.4e-1 -L-2 --leakage-decay=0.7 -d70 -H99 -e22 --presynaptic-noise=0.1 CONTROL
+-l1.4e-1 -L-3 --leakage-decay=0.7 -d70 --reverse -H79 -e8 --presynaptic-noise=0.0 --balanced-training
+-l1.4e-1 -L-20 --leakage-decay=0.707 -d70 -H119 -e25 --presynaptic-noise=0.3 CONTROL
+-l1.4e-1 -L-2 --leakage-decay=0.75 --swap-corpora -d70 --reverse -H99 -e6 --presynaptic-noise=0.2 --balanced-training CONTROL
+92d8d39-18  -l1.4e-1 -L-4 --leakage-decay=0.707 -d70 --reverse -H79 -e18 --presynaptic-noise=0.0 --balanced-training CONTROL
+-l1.4e-1 -L-3 --leakage-decay=0.7 --balanced-training -d70 -H79 -e16 --presynaptic-noise=0.0 --balanced-training CONTROL
+-l1.4e-1 -L-0 --leakage-decay=0.707 -d70 -H119 -e22 --presynaptic-noise=0.3 --balanced-training CONTROL
+-l1.4e-1 -L-3 --leakage-decay=0.7 -d70 -H79 -e16 --presynaptic-noise=0.0 --balanced-training CONTROL
+-l1.4e-1 -L-3 --leakage-decay=0.7 -d70 -H59 -e16 --presynaptic-noise=0.0 --balanced-training CONTROL
+-l1.4e-1 -L-2 --leakage-decay=0.75 --swap-corpora -d70 -H99 -e29 --presynaptic-noise=0.2 --balanced-training CONTROL
+-l1.4e-1 -L-4 --leakage-decay=0.707 --swap-corpora -d70 --reverse -H79 -e13 --presynaptic-noise=0.0 --balanced-training CONTROL
+
+
+-l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -d70 -H119 -e34 --presynaptic-noise=0.0 CONTROL
+-l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -d70 -H59 -e33 --presynaptic-noise=0.0 CONTROL
+-l2e-1 -L-3 --leakage-decay=0.7 -d70 -H119 -e23 --presynaptic-noise=0.3 CONTROL
+-l2e-1 -L-3 --leakage-decay=0.7 --concat-texts -d70 -H119 -e21 --presynaptic-noise=0.3 --balanced-training CONTROL
+
+-l2e-1 -L-4 --leakage-decay=0.7 --concat-texts -d70 -H119 -e25 --presynaptic-noise=0.2 NO-CONTROL
+
+-l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -d70 -H119 -e43 --presynaptic-noise=0.1 CONTROL
+-l2e-1 -L-2 --leakage-decay=0.8 --concat-texts -d70 -H99 -e23 --presynaptic-noise=0.0 CONTROL
+-l2e-1 -L-3 --leakage-decay=0.7 --concat-texts -d70 -H119 -e32 --presynaptic-noise=0.2 CONTROL
+-l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -d70 -H139 -e24 --presynaptic-noise=0.3 CONTROL
+-l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -d70 -H79 -e33 --presynaptic-noise=0.0 CONTROL
+
+-l1.4e-1 -L-1 --leakage-decay=0.9 -d70 -H99 -e40 CONTROL
+-l1.4e-1 -L-1 --leakage-decay=0.5 --balanced-training -d70 -H119 -e10 --presynaptic-noise=0.1 CONTROL
+-l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -d70 -H79 -e45 --presynaptic-noise=0.0 CONTROL
+-l2e-1 -L-1 --leakage-decay=0.8 -d70 -H99 -e30 --presynaptic-noise=0.0 CONTROL
+-l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -d70 -H59 -e40 --presynaptic-noise=0.0 CONTROL
+
+# -l2e-1 -L-2 --leakage-decay=0.8 --concat-texts -d70 -H119 -e3 --presynaptic-noise=0.2 CONTROL
+# -l2e-1 -L-2 --leakage-decay=0.8 --concat-texts -d70 --reverse -H119 -e6 --presynaptic-noise=0.3 CONTROL
+#-l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -d70 -H119 -e7 --presynaptic-noise=0.5 CONTROL

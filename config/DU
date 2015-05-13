@@ -1,0 +1,10 @@
+-l1.4e-1 -L-10 --leakage-decay=0.707 -H139 -e27 --presynaptic-noise=0.3 --concat-texts
+-l1.4e-1 -L-3 --leakage-decay=0.7 -H139 -e9 --presynaptic-noise=0.3 --concat-texts
+-l1.4e-1 -L-2 --leakage-decay=0.75 --swap-corpora --reverse -H99 -e13 --presynaptic-noise=0.2 --concat-texts
+-l1.4e-1 -L-2 --leakage-decay=0.7 -H119 -e6 --presynaptic-noise=0.1 --concat-texts
+-l1.4e-1 -L-20 --leakage-decay=0.707 -H119 -e10 --presynaptic-noise=0.3 --concat-texts
+-l1.4e-1 -L-0 --leakage-decay=0.707 -H119 -e7 --presynaptic-noise=0.3 --concat-texts 
+-l1.4e-1 -L-2 --leakage-decay=0.7 -H99 -e11 --presynaptic-noise=0.1 --concat-texts
+-l1.4e-1 -L-2 --leakage-decay=0.7 --balanced-training -H99 -e13 --presynaptic-noise=0.2 --concat-texts
+-l2e-1 -L-50 --leakage-decay=0.707 -H179 -e18 --presynaptic-noise=0.3 --concat-texts
+-l1.4e-1 -L-3 --leakage-decay=0.7 -H59 -e5 --presynaptic-noise=0.3 --concat-texts
