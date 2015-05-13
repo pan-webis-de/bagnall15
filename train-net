@@ -24,13 +24,21 @@ def get_alphabet(texts):
     return a
 
 
-def encode_and_cycle_texts(alphabet, texts):
+def encode_and_cycle_texts(alphabet, texts, reverse=False):
     print >>sys.stderr, "remapping texts"
-    return {k: itertools.cycle(alphabet.encode_text(x) for x in v)
+    if reverse:
+        print >>sys.stderr, "... reversing texts"
+        def f(x):
+            return ''.join(reversed(x))
+    else:
+        def f(x):
+            return x
+    return {k: itertools.cycle(f(alphabet.encode_text(x)) for x in v)
             for k, v in texts.items()}
 
 
 def get_net_and_corpus(srcdir, remap, accept_fn, control_corpus=None,
+                       reverse=False,
                        **kwargs):
     raw_training_texts = load_texts(srcdir, remap, accept_fn,
                                     training_fn_search)
@@ -57,8 +65,9 @@ def get_net_and_corpus(srcdir, remap, accept_fn, control_corpus=None,
     }, sort_keys=True)
 
     net = charmodel.Net(alphabet, textnames, metadata=metadata, **kwargs)
-    training_texts = encode_and_cycle_texts(alphabet, raw_training_texts)
-    test_texts = encode_and_cycle_texts(alphabet, raw_test_texts)
+    training_texts = encode_and_cycle_texts(alphabet, raw_training_texts,
+                                            reverse=reverse)
+    test_texts = encode_and_cycle_texts(alphabet, raw_test_texts, reverse=reverse)
     return net, training_texts, test_texts
 
 
@@ -347,6 +356,8 @@ def main():
     parser.add_argument('--control-corpus', help="add extra documents from here")
     parser.add_argument('--try-swapping-texts', action='store_true',
                         help="if known text is short, train on unknown text")
+    parser.add_argument('--reverse', action='store_true',
+                        help="learn and process all texts in reverse")
 
     parser.add_argument('--pan-answers',
                         help="write answers here in the style expected by PAN")
@@ -392,6 +403,7 @@ def main():
     net, training_texts, test_texts = get_net_and_corpus(args.srcdir,
                                                          remap, accept_fn,
                                                          args.control_corpus,
+                                                         args.reverse,
                                                          **net_kwargs)
     if args.try_swapping_texts:
         maybe_swap_texts(training_texts, test_texts)

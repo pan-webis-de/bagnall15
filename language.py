@@ -35,7 +35,8 @@ def always(x):
 
 def load_texts(srcdir, remap,
                class_accept=always,
-               file_accept=training_fn_search):
+               file_accept=training_fn_search,
+               reverse=False):
     texts = {}
     for subdir in os.listdir(srcdir):
         if not class_accept(subdir):
