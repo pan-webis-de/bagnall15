@@ -407,6 +407,8 @@ def main():
                         help="save net here")
     parser.add_argument('--control-corpus',
                         help="add extra documents from here")
+    parser.add_argument('--no-control-corpus', action='store_true',
+                        help="don't use control corpus even if it is specified")
     parser.add_argument('--try-swapping-texts', action='store_true',
                         help="if known text is short, train on unknown text")
     parser.add_argument('--swap-corpora', action='store_true',
@@ -463,9 +465,14 @@ def main():
             net_kwargs[k] = v
 
     concat_texts = args.concat_texts or args.swap_corpora
+
+    if args.no_control_corpus:
+        control_corpus = None
+    else:
+        control_corpus = args.control_corpus
     net, training_texts, test_texts = get_net_and_corpus(args.srcdir,
                                                          remap, accept_fn,
-                                                         args.control_corpus,
+                                                         control_corpus,
                                                          args.reverse,
                                                          concat_texts,
                                                          **net_kwargs)
