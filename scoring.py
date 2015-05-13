@@ -597,6 +597,7 @@ def print_ensemble_usefulness(ensemble_data, lang, n_results=0):
     print lang
     delta_sums = defaultdict(float)
     delta_counts = defaultdict(int)
+    score_map = {}
     for single_lines, singles, ensembles in ensemble_data:
         deltas = calc_ensemble_usefulness(singles, ensembles)
         for k, v in deltas.items():
@@ -607,6 +608,8 @@ def print_ensemble_usefulness(ensemble_data, lang, n_results=0):
         if len(ensemble_data) == 1:
             for name, delta in sorted(deltas.items(), key=lambda x: x[1]):
                 print "%s %+.3f" % (coloured[name], delta)
+        score_map.update((k, v) for v, k in single_lines)
+
 
     if len(ensemble_data) > 1:
         print "RESULTS"
@@ -616,7 +619,23 @@ def print_ensemble_usefulness(ensemble_data, lang, n_results=0):
             delta_means.append((v / c, c, k))
 
         for score, count, name in sorted(delta_means)[-n_results:]:
-            print "%s %2d %+.3f" % (name, count, score)
+            config = read_config_from_shortname(lang, name)
+            if '-' in name:
+                commit, epoch = name.split('-', 1)
+                cmdline = fix_config_epoch(config[2], epoch)
+                cmdline = prune_config(cmdline, commit)
+            else:
+                cmdline = prune_config(cmdline, name)
+
+            single_score = score_map.get(name, '')
+            print "%12s %s%.3f%s %2d %+.3f %s%s%s" % (name,
+                                                      colour.GREY,
+                                                      single_score,
+                                                      colour.C_NORMAL,
+                                                      count, score,
+                                                      colour.GREY,
+                                                      ' '.join(cmdline),
+                                                      colour.C_NORMAL)
 
 
 def print_ensembles(single_lines, singles, ensembles, n_results=0):
