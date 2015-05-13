@@ -48,6 +48,8 @@ def main():
                         help="use this as c@1 centre")
     parser.add_argument('--corpus-version', type=int, default=-1,
                         help="restrict corpus to version 3 or 4 (default auto)")
+    parser.add_argument('-n', '--number-of-results', type=int, default=10,
+                        help="show only this many results (e.g. with -u -i)")
 
     args = parser.parse_args()
     truth = read_truth_file(args.truth_file)
@@ -89,9 +91,10 @@ def main():
                                                exclude=exclude,
                                                iterations=args.ensemble_iterations)
             if args.ensemble_usefulness:
-                print_ensemble_usefulness(ensemble_data)
+                lang = re.search(r'dataset-(\w+)-20', args.truth_file).group(1)
+                print_ensemble_usefulness(ensemble_data, lang, args.number_of_results)
             else:
-                print_ensembles(*ensemble_data[0])
+                print_ensembles(*ensemble_data[0], n_results=args.number_of_results)
         else:
             if args.cat1_centre:
                 print "--cat1-centre doesn't apply in this mode"

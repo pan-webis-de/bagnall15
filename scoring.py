@@ -593,7 +593,8 @@ def calc_ensemble_usefulness(singles, ensembles):
     return deltas
 
 
-def print_ensemble_usefulness(ensemble_data):
+def print_ensemble_usefulness(ensemble_data, lang, n_results=0):
+    print lang
     delta_sums = defaultdict(float)
     delta_counts = defaultdict(int)
     for single_lines, singles, ensembles in ensemble_data:
@@ -614,11 +615,11 @@ def print_ensemble_usefulness(ensemble_data):
             c = delta_counts[k]
             delta_means.append((v / c, c, k))
 
-        for score, count, name in sorted(delta_means):
+        for score, count, name in sorted(delta_means)[-n_results:]:
             print "%s %2d %+.3f" % (name, count, score)
 
 
-def print_ensembles(single_lines, singles, ensembles):
+def print_ensembles(single_lines, singles, ensembles, n_results=0):
     coloured = get_colour_spectrum(singles.keys())
 
     prev = None
@@ -629,7 +630,7 @@ def print_ensembles(single_lines, singles, ensembles):
 
     centre_sum = 0.0
     centre_sum2 = 0.0
-    for i, x in enumerate(ensembles):
+    for i, x in enumerate(ensembles[-n_results:]):
         c, names = x
         name = '|'.join(coloured[x] for x in names)
         n = len(set(names))
