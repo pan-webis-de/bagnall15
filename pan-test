@@ -9,24 +9,28 @@ HERE = os.path.dirname(__file__)
 
 # XXX don't add extra lines - config needs to fit in 20 lines.
 CONFIG = {
-    'EN': ['-H119', '-e40', '-M', 'en',
-           '--presynaptic-noise=0.0',
+    'EN': ['-H139', '-e40', '-M', 'en',
+           '--presynaptic-noise=0.2',
            '--control-corpus', 'corpus/control/EN'],
-    'GR': ['-H99', '-e40', '-M', 'gr',
-           '--presynaptic-noise=0.0',
+    'GR': ['-H139', '-e40', '-M', 'gr',
+           '--presynaptic-noise=0.2',
            #'--reverse',
            '--control-corpus', 'corpus/control/GR'],
-    'SP': ['-H119', '-e40', '-M', 'es',
-           '--presynaptic-noise=0.0',
+    'SP': ['-H139', '-e40', '-M', 'es',
+           '--presynaptic-noise=0.2',
            #'--reverse',
            '--control-corpus', 'corpus/control/SP'],
-    'DU': ['-H119', '-e30', '-M', 'nl',
-           '--presynaptic-noise=0.0', '--concat-texts',
-           '--control-corpus', 'corpus/control/DU'],
+    'DU': ['-H139', '-e30', '-M', 'nl',
+           '--presynaptic-noise=0.2', '--concat-texts',
+           '--control-corpus', 'corpus/control/DU',
+           #"--temporal-pgm-dump",
+           #"--periodic-pgm-dump", 'ihw how',
+           #"--periodic-pgm-period", '5000',
+       ],
 }
 
 CMD = ['./train-net', '-n', 'pan', '--batch-size=40',
-       '-l2e-1', '-L-5', '--leakage-decay=0.9',
+       '-l2e-1', '-L-5', '--leakage-decay=0.7',
        #'--balanced-training',
        #'--swap-corpora',
        '--activation=2', '--pan-hedge=0.0',
@@ -35,6 +39,7 @@ CMD = ['./train-net', '-n', 'pan', '--batch-size=40',
        '-r8',
        '--reverse',
        '--concat-texts',
+       '--init-method=3'
        ]
 
 
