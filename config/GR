@@ -1,36 +1,27 @@
-# d47d1a3-14
--l2e-1 -L-4 --leakage-decay=0.7 --concat-texts -H119 -e14 --presynaptic-noise=0.2 --no-control-corpus
+#0.737 57d65f7-27
+-l2e-1 -L-5 --leakage-decay=0.67 --balanced-training -H99 -e27 --presynaptic-noise=0.3
+-l2e-1 -L-5 --leakage-decay=0.67 --balanced-training -H99 -e27 --presynaptic-noise=0.3 --init-method=0
 
-# c3a5a6e-22 
+# c3a5a6e-22
 -l1.4e-1 -L-2 --leakage-decay=0.7 -H119 -e22 --presynaptic-noise=0.1
 
-#5509976-33  
--l1.4e-1 -L-0 --leakage-decay=0.707 -H119 -e33 --presynaptic-noise=0.3
-
-# d47d1a3-15 17 +0.006  
+# d47d1a3-15 17 +0.006
 -l2e-1 -L-4 --leakage-decay=0.7 --concat-texts -H119 -e15 --presynaptic-noise=0.2 --no-control-corpus
 
-#0130a0e-22 21 +0.005  
--l1.4e-1 -L-3 --leakage-decay=0.7 -H119 -e22 --presynaptic-noise=0.1
+df38d1e-31 0.687 21 +0.013
+-l2e-1 -L-5 --leakage-decay=0.7 --balanced-training --reverse -H99 -e31 --presynaptic-noise=0.2
 
-#b640057-5 15 +0.004  
--l1.4e-1 -L-3 --leakage-decay=0.7 -H159 -e5 --presynaptic-noise=0.5
-
-#bf9298e-17  
--l2e-1 -L-0.25 --leakage-decay=0.8 --activation=1 --concat-texts -H119 -e17 --presynaptic-noise=0.3
-
-#894c7d5-27  
--l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -H119 -e27 --presynaptic-noise=0.3
-
-#77b6626-19  
--l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -H119 -e19 --presynaptic-noise=0.5
-
-#64231db-18  
--l2e-1 -L-3 --leakage-decay=0.7 --concat-texts -H119 -e18 --presynaptic-noise=0.3 --reverse --no-control-corpus
-
-#06cd228-32  
+#06cd228-32
 -l2e-1 -L-1 --leakage-decay=0.8 --concat-texts --reverse -H119 -e32 --presynaptic-noise=0.3
 
-#dc51f8d-12  7 +0.005  
--l2e-1 -L-3 --leakage-decay=0.7 --activation=1 -H119 -e12 --presynaptic-noise=0.3
+#0130a0e-22 21 +0.005
+-l1.4e-1 -L-3 --leakage-decay=0.7 -H119 -e22 --presynaptic-noise=0.1
 
+#77b6626-19
+-l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -H119 -e19 --presynaptic-noise=0.5
+
+#64231db-18
+-l2e-1 -L-3 --leakage-decay=0.7 --concat-texts -H119 -e18 --presynaptic-noise=0.3 --reverse --no-control-corpus
+
+#dc51f8d-12  7 +0.005
+-l2e-1 -L-3 --leakage-decay=0.7 --activation=1 -H119 -e12 --presynaptic-noise=0.3
