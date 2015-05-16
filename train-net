@@ -426,7 +426,7 @@ def main():
                         help="write answers here not adjusted for c@1 (- for stdout)")
     parser.add_argument('--raw-answers-trace',
                         help=("write raw answers after every epoch "
-                              "(put %d in name)"))
+                              "(put %%d in name)"))
     parser.add_argument('--pan-hedge', type=float, default=0.00,
                         help="radius of undecided zone in pan output")
     parser.add_argument('--init-method', type=int, default=charmodel.INIT_FLAT,
