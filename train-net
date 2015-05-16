@@ -429,6 +429,8 @@ def main():
                               "(put %d in name)"))
     parser.add_argument('--pan-hedge', type=float, default=0.00,
                         help="radius of undecided zone in pan output")
+    parser.add_argument('--init-method', type=int, default=charmodel.INIT_FLAT,
+                        help="0: zeros, 1: flat, 2: fan-in, 3: runs")
 
     args = parser.parse_args()
 
@@ -461,7 +463,9 @@ def main():
                  "learning_method",
                  "batch_size",
                  "filename",
-                 "presynaptic_noise"):
+                 "presynaptic_noise",
+                 "init_method",
+        ):
             net_kwargs[k] = v
 
     concat_texts = args.concat_texts or args.swap_corpora
