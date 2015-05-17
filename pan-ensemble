@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 from language import guess_directory_lang
+from scoring import balance_results
 
 HERE = os.path.dirname(__file__)
 
