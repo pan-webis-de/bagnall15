@@ -363,7 +363,7 @@ def get_shortname(fn, epoch_from_filename=False):
     return shortname
 
 def answers_generator(filename_gen, truth, epoch_from_filename=False,
-                 use_shortname=True):
+                      use_shortname=True):
     for fn in filename_gen:
         answers = read_answers_file(fn)
         if use_shortname:
@@ -468,8 +468,7 @@ def search_answer_files(filename_gen, truth, epoch_from_filename=False):
 def search_commits(filename_gen, truth, n=8, epoch_from_filename=False,
                    cat1_centre=None, cat1_radius=0):
     answers_gen = answers_generator(filename_gen, truth,
-                                    epoch_from_filename,
-                                    use_shortname)
+                                    epoch_from_filename)
     if cat1_generator is None:
         results = get_indicators(answers_gen, truth)
         scores = get_indicator_scores(results)
