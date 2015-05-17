@@ -7,8 +7,9 @@ from scoring import search_for_centre, evaluate_fixed_cat1
 from scoring import regex_filter, always, get_shortname, never
 from scoring import versioned_file_gen, simple_file_gen
 from scoring import prune_config, read_config, fix_config_epoch
+
 import subprocess
-from scoring import colour
+from scoring import set_use_colour
 
 HERE = os.path.dirname(__file__)
 
@@ -105,8 +106,13 @@ def main():
                         help=("only show lines with config matching this"))
     parser.add_argument('-S', '--sort-by-commit', action='store_true',
                         help=("sort by commit id, not score"))
+    parser.add_argument('-C', '--colour', default='auto', metavar='yes|no|auto',
+                        help="use colour: yes, no, auto (default)")
 
     args = parser.parse_args()
+
+    global colour
+    colour = set_use_colour(args.colour)
 
     LANG_CONFIG = [
         ('spanish', 'SP'),

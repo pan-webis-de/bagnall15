@@ -7,7 +7,8 @@ from language import read_truth_file, read_answers_file
 
 from scoring import calc_auc, calc_cat1, search_answer_files,\
     search_commits, search_one, regex_filter, \
-    simple_file_gen, versioned_file_gen, always, never
+    simple_file_gen, versioned_file_gen, always, never, \
+    set_use_colour
 
 from scoring import generate_ensembles, print_ensembles, print_ensemble_usefulness
 
@@ -50,8 +51,13 @@ def main():
                         help="restrict corpus to version 3 or 4 (default auto)")
     parser.add_argument('-n', '--number-of-results', type=int, default=10,
                         help="show only this many results (e.g. with -u -i)")
+    parser.add_argument('-C', '--colour', default='auto', metavar='yes|no|auto',
+                        help="use colour: yes, no, auto (default)")
 
     args = parser.parse_args()
+
+    set_use_colour(args.colour)
+
     truth = read_truth_file(args.truth_file)
 
     if args.answer_file_pattern:

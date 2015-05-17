@@ -7,16 +7,13 @@ import itertools
 import random
 import subprocess
 import os
-import sys
+from colour import get_namespace
 
-if sys.stdout.isatty():
-    import colour
-else:
-    class EmptyThing(object):
-        def __getattr__(self, k):
-            return ''
 
-    colour = EmptyThing()
+def set_use_colour(use_colour):
+    global colour
+    colour = get_namespace(use_colour)
+    return colour
 
 
 def simple_file_gen(file_pattern):

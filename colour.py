@@ -34,3 +34,23 @@ _spectrum = (range(160, 196, 6) +
 
 SPECTRUM = [_FOREGROUND % x for x in _spectrum]
 BACKGROUND_SPECTRUM = [_BACKGROUND % x for x in _spectrum]
+
+
+def get_namespace(use_colour='auto'):
+    import sys
+    class EmptyThing(object):
+        pass
+    ns = EmptyThing()
+
+    if use_colour.lower() in ('yes', 'true', 'y', 'always'):
+        c = True
+    elif use_colour.lower() in ('no', 'false', 'n', 'never'):
+        c = False
+    else:
+        c = sys.stdout.isatty()
+
+    for k, v in globals().items():
+        if k.isupper():
+            setattr(ns, k, (v if c else ''))
+
+    return ns
