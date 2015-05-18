@@ -326,7 +326,6 @@ def train_silently_balanced(net, texts, leakage, sub_epochs, leakage_decay,
         while len(visited_classes) < n_classes:
             n, name, cycle = heappop(training_counts)
             visited_classes.add(name)
-            print >> sys.stderr, "popped %s, trained on %d" % (name, n)
             text = cycle.next()
             train_len = max(len(text) - ignore_start, 0)
             n += train_len
