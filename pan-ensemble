@@ -19,6 +19,12 @@ CAT1_SETTINGS = {
     'SP' : (None, 0.03),
 }
 
+def write_answers(fn, results):
+    f = open(fn, 'w')
+    for k, v in sorted(results.items()):
+        print >>f, "%s %.3f" % (k, v)
+    f.close()
+
 
 def get_commands(lang, input_dir):
     commands = []
@@ -33,19 +39,23 @@ def get_commands(lang, input_dir):
     return commands
 
 
-def aggregate_results(commands, timeout=None):
+def aggregate_results(commands, timeout=None, raw_answers=''):
     results = {}
     if timeout is not None:
         start = time.time()
         end = start + timeout * 3600
 
-    for command in commands:
+    for i, command in enumerate(commands):
         try:
-            print >> sys.stderr, "running %s" % (' '.join(command))
+            print >> sys.stderr, "%d running %s" % (i, ' '.join(command))
             r = subprocess.check_output(command).strip()
         except subprocess.CalledProcessError, e:
             print >> sys.stderr, e
             continue
+        if raw_answers:
+            f = open(raw_answers % i, 'w')
+            f.write(r)
+            f.close()
         for line in r.split('\n'):
             k, v = line.split()
             results.setdefault(k, []).append(float(v))
@@ -68,6 +78,8 @@ def main():
                         help="stop soon after this many hours")
     parser.add_argument('-r', '--randomise', action="store_true",
                         help="shuffle the ensemble (meaningful with --timeout)")
+    parser.add_argument('--write-raw-answers', action="store_true",
+                        help="write raw answers for each member")
 
     args = parser.parse_args()
 
@@ -76,15 +88,21 @@ def main():
 
     commands = get_commands(lang, args.input_dir)
     random.shuffle(commands)
-    results = aggregate_results(commands, args.timeout)
+
+    if args.write_raw_answers:
+        raw_answers = os.path.join(args.output_dir, "raw-answers-%s.txt")
+    else:
+        raw_answers = None
+
+    results = aggregate_results(commands, args.timeout, raw_answers)
+
+    if args.write_raw_answers:
+        write_answers(raw_answers % 'ensemble', results)
 
     cat1_settings = CAT1_SETTINGS[lang]
     balanced_results = balance_results(results)
 
     fn = os.path.join(args.output_dir, "answers.txt")
-    f = open(fn, 'w')
-    for k, v in sorted(balanced_results.items()):
-        print >>f, "%s %.3f" % (k, v)
-    f.close()
+    write_answers(fn, balanced_results)
 
 main()
