@@ -1,0 +1,21 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+from scoring import balance_results
+
+
+def main():
+    scores = [
+        {k: v * 0.1 for k, v in zip('ABCDEFGHIJKL', range(10))},
+        {k: v * v * 0.01 for k, v in zip('ABCDEFGHIJKLMN', range(11))},
+    ]
+    for s in scores:
+        b1 = balance_results(s)
+        b2 = balance_results(s, 0.3)
+        b3 = balance_results(s, 0.7, 0.1)
+        print "    orig auto  c0.3 0.7±0.1"
+        for k, v in sorted(s.items()):
+            print "%s: %.3f %.3f %.3f %.3f" % (k, v, b1[k], b2[k], b3[k])
+
+
+main()
