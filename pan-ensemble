@@ -10,6 +10,14 @@ HERE = os.path.dirname(__file__)
 
 CMD = './train-net --ignore-start=10 --raw-answers=-'.split()
 
+CAT1_SETTINGS = {
+    'DU' : (None, 0.0),
+    'GR' : (None, 0.0),
+    'EN' : (None, 0.0),
+    'SP' : (None, 0.03),
+}
+
+
 def get_commands(lang, input_dir):
     commands = []
     f = open('config/%s-common' % lang)
@@ -54,9 +62,12 @@ def main():
     commands = get_commands(lang, args.input_dir)
     results = aggregate_results(commands)
 
+    cat1_settings = CAT1_SETTINGS[lang]
+    balanced_results = balance_results(results)
+
     fn = os.path.join(args.output_dir, "answers.txt")
     f = open(fn, 'w')
-    for k, v in sorted(results.items()):
+    for k, v in sorted(balanced_results.items()):
         print >>f, "%s %.3f" % (k, v)
     f.close()
 
