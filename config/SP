@@ -1,43 +1,29 @@
 #c3a5a6e-24
--l1.4e-1 -L-2 --leakage-decay=0.7 -H139 -e24 --presynaptic-noise=0.1
+-l1.4e-1 -L-2 --leakage-decay=0.7 -H139 -e24 --presynaptic-noise=0.1 --init-method=0
 
-#c3a5a6e-12
--l1.4e-1 -L-2 --leakage-decay=0.7 -H139 -e12 --presynaptic-noise=0.1
-
-#edda36f-24 0.839 21 +0.017
--l1.4e-1 -L-2 --leakage-decay=0.7 -H119 -e24 --presynaptic-noise=0.1
-#edda36f-20
--l1.4e-1 -L-2 --leakage-decay=0.7 -H119 -e20 --presynaptic-noise=0.1
-
-#a294438-13
-#-l1.4e-1 -L-3 --leakage-decay=0.7 --reverse -H79 -e13 --presynaptic-noise=0.0
+#30f8e84-16
+-l1.4e-1 -L-2 --leakage-decay=0.75 --swap-corpora -H99 -e16 --presynaptic-noise=0.2
 
 #92d8d39-19
 -l1.4e-1 -L-4 --leakage-decay=0.707 --reverse -H79 -e19 --presynaptic-noise=0.0
 
-#0.840 baaf5ab-26  
--l2e-1 -L-5 --leakage-decay=0.9 -d10 --init-method=2 -H79 -e26 --presynaptic-noise=0.0
-
-#5509976-20
--l1.4e-1 -L-0 --leakage-decay=0.707 -H119 -e20 --presynaptic-noise=0.3
-
-#06cd228-34 0.868  9 +0.005
-#-l2e-1 -L-1 --leakage-decay=0.8 --concat-texts --reverse -H119 -e34 --presynaptic-noise=0.3
-
-#908c98f-19 0.871  7 +0.005
+#908c98f-19
 -l2e-1 -L-3 --leakage-decay=0.7 --concat-texts -H139 -e19 --presynaptic-noise=0.3
 
-#a2a379c-13 0.852  6 +0.004
--l2e-1 -L-2 --leakage-decay=0.8 --concat-texts -H139 -e13 --presynaptic-noise=0.5
+#edda36f-24
+-l1.4e-1 -L-2 --leakage-decay=0.7 -H119 -e24 --presynaptic-noise=0.1
 
-#06cd228-14 0.890  9 +0.004
--l2e-1 -L-1 --leakage-decay=0.8 --concat-texts --reverse -H119 -e14 --presynaptic-noise=0.3
-
-#30f8e84-16 0.855 28 +0.017
--l1.4e-1 -L-2 --leakage-decay=0.75 --swap-corpora -H99 -e16 --presynaptic-noise=0.2
-#30f8e84-5 0.816 14 +0.006
--l1.4e-1 -L-2 --leakage-decay=0.75 --swap-corpora -H99 -e5 --presynaptic-noise=0.2
-
-#df38d1e-32 0.812 10 +0.004
+#df38d1e-32
 -l2e-1 -L-5 --leakage-decay=0.7 --balanced-training --reverse -H119 -e32 --presynaptic-noise=0.2
 
+#0.840 baaf5ab-26
+-l2e-1 -L-5 --leakage-decay=0.9 -d10 --init-method=2 -H79 -e26 --presynaptic-noise=0.0
+
+#a2a379c-13
+-l2e-1 -L-2 --leakage-decay=0.8 --concat-texts -H139 -e13 --presynaptic-noise=0.5
+
+#06cd228-34
+-l2e-1 -L-1 --leakage-decay=0.8 --concat-texts --reverse -H119 -e34 --presynaptic-noise=0.3
+
+#c3a5a6e-12
+-l1.4e-1 -L-2 --leakage-decay=0.7 -H139 -e12 --presynaptic-noise=0.1
