@@ -593,7 +593,8 @@ def calc_ensemble_usefulness(singles, ensembles):
     return deltas
 
 
-def print_ensemble_usefulness(ensemble_data, lang, n_results=0):
+def print_ensemble_usefulness(ensemble_data, lang, n_results=0,
+                              sort_by_commit=False):
     print lang
     delta_sums = defaultdict(float)
     delta_counts = defaultdict(int)
@@ -618,7 +619,11 @@ def print_ensemble_usefulness(ensemble_data, lang, n_results=0):
             c = delta_counts[k]
             delta_means.append((v / c, c, k))
 
-        for score, count, name in sorted(delta_means)[-n_results:]:
+        results = sorted(delta_means)[-n_results:]
+        if sort_by_commit:
+            results.sort(key=lambda x: x[2])
+
+        for score, count, name in results:
             config = read_config_from_shortname(lang, name)
             if '-' in name:
                 commit, epoch = name.split('-', 1)
@@ -638,7 +643,8 @@ def print_ensemble_usefulness(ensemble_data, lang, n_results=0):
                                                       colour.C_NORMAL)
 
 
-def print_ensembles(single_lines, singles, ensembles, n_results=0):
+def print_ensembles(single_lines, singles, ensembles, n_results=0,
+                    sort_by_commit=False):
     coloured = get_colour_spectrum(singles.keys())
 
     prev = None
@@ -649,7 +655,12 @@ def print_ensembles(single_lines, singles, ensembles, n_results=0):
 
     centre_sum = 0.0
     centre_sum2 = 0.0
-    for i, x in enumerate(ensembles[-n_results:]):
+
+    results = ensembles[-n_results:]
+    if sort_by_commit:
+        results.sort(key=lambda x: x[1])
+
+    for i, x in enumerate(results):
         c, names = x
         name = '|'.join(coloured[x] for x in names)
         n = len(set(names))

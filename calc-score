@@ -20,7 +20,7 @@ def main():
                         help="read scores from files matching this pattern")
     parser.add_argument('-s', '--search', action="store_true",
                         help="search for good c@1 settings.")
-    parser.add_argument('-S', '--search-commits-only', action="store_true",
+    parser.add_argument('--search-commits-only', action="store_true",
                         help="print good commit IDs")
     parser.add_argument('-v', '--verbose', action="store_true",
                         help="print more")
@@ -53,6 +53,8 @@ def main():
                         help="show only this many results (e.g. with -u -i)")
     parser.add_argument('-C', '--colour', default='auto', metavar='yes|no|auto',
                         help="use colour: yes, no, auto (default)")
+    parser.add_argument('-S', '--sort-by-commit', action='store_true',
+                        help=("sort by commit id, not score"))
 
     args = parser.parse_args()
 
@@ -98,9 +100,11 @@ def main():
                                                iterations=args.ensemble_iterations)
             if args.ensemble_usefulness:
                 lang = re.search(r'dataset-(\w+)-20', args.truth_file).group(1)
-                print_ensemble_usefulness(ensemble_data, lang, args.number_of_results)
+                print_ensemble_usefulness(ensemble_data, lang, args.number_of_results,
+                                          sort_by_commit=args.sort_by_commit)
             else:
-                print_ensembles(*ensemble_data[0], n_results=args.number_of_results)
+                print_ensembles(*ensemble_data[0], n_results=args.number_of_results,
+                                sort_by_commit=args.sort_by_commit)
         else:
             if args.cat1_centre:
                 print "--cat1-centre doesn't apply in this mode"
