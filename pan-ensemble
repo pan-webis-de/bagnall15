@@ -5,6 +5,7 @@ import sys
 import subprocess
 from language import guess_directory_lang
 from scoring import balance_results
+import time
 
 HERE = os.path.dirname(__file__)
 
@@ -31,8 +32,12 @@ def get_commands(lang, input_dir):
     return commands
 
 
-def aggregate_results(commands):
+def aggregate_results(commands, timeout=None):
     results = {}
+    if timeout is not None:
+        start = time.time()
+        end = start + timeout * 3600
+
     for command in commands:
         try:
             print >> sys.stderr, "running %s" % (' '.join(command))
@@ -43,6 +48,11 @@ def aggregate_results(commands):
         for line in r.split('\n'):
             k, v = line.split()
             results.setdefault(k, []).append(float(v))
+        if timeout is not None and time.time() > end:
+            print >> sys.stderr, ("stopping after %.1f hours" %
+                                  ((time.time() - start) / 3600.0,))
+            break
+
     aggregated = {}
     for k, v in results.items():
         aggregated[k] = sum(v) / len(v)
@@ -53,6 +63,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input-dir', help="find testing corpus here")
     parser.add_argument('-o', '--output-dir', help="write results here")
+    parser.add_argument('-t', '--timeout', type=float, default=10.0,
+                        help="stop soon after this many hours")
 
     args = parser.parse_args()
 
@@ -60,7 +72,7 @@ def main():
     print >> sys.stderr, "using %s config" % lang
 
     commands = get_commands(lang, args.input_dir)
-    results = aggregate_results(commands)
+    results = aggregate_results(commands, args.timeout)
 
     cat1_settings = CAT1_SETTINGS[lang]
     balanced_results = balance_results(results)
