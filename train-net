@@ -331,15 +331,15 @@ def main():
                         help="how many cycles through the texts to do")
     parser.add_argument('--batch-size', type=int, default=20, metavar='<int>',
                         help="mini-batch size")
-    parser.add_argument('--presynaptic-noise', type=float, default=0,
+    parser.add_argument('--presynaptic-noise', type=float, default=0.1,
                         metavar='<float>',
                         help="Add this much presynaptic noise")
-    parser.add_argument('-l', '--learn-rate', type=float, default=1e-3,
+    parser.add_argument('-l', '--learn-rate', type=float, default=1e-1,
                         help=charmodel.Net.learn_rate.__doc__)
-    parser.add_argument('-L', '--leakage', type=float, default=-1,
+    parser.add_argument('-L', '--leakage', type=float, default=-1.0,
                         help=("how much training leaks into other classes "
                               "[0-1] or negative"))
-    parser.add_argument('--leakage-decay', type=float, default=1,
+    parser.add_argument('--leakage-decay', type=float, default=1.0,
                         help="change in leakage per sub-epoch")
     parser.add_argument('--learn-rate-decay', type=float, default=1,
                         help="change in learn-rate per sub-epoch")
