@@ -14,6 +14,8 @@ from language import load_texts, always, test_fn_search, training_fn_search
 from language import read_truth_file
 import mappings
 import numpy as np
+from pan import balance_results, write_answers, scale_results
+
 
 from colour import RED, GREEN, YELLOW, C_NORMAL
 
@@ -107,66 +109,39 @@ def get_entropies_matrix(net, ignore_start, test_texts):
     return np.array(py_entropies)
 
 
-def write_pan_results(net, filename, ignore_start, test_texts,
-                      hedge=0.04, raw=False):
+def get_indices(net, ignore_start, test_texts):
     entropies = get_entropies_matrix(net, ignore_start, test_texts)
-    #rel_entropies = entropies - entropies.mean(axis=0)
     rel_entropies = entropies - np.median(entropies, axis=0)
 
     norm = np.linalg.norm(rel_entropies, ord=1, axis=1)
     if np.all(norm):
         rel_entropies /= norm[:, None]
 
-    medians = np.median(rel_entropies, axis=1)
+    class_names = net.class_names
 
-    if 'control' in net.class_names:
+    if 'control' in class_names:
         control_index = net.class_names.index('control')
+        print >> sys.stderr, "deleting control %d" % control_index
         rel_entropies = np.delete(rel_entropies,
                                   control_index, axis=1)
+        class_names = [x for x in class_names if x != 'control']
 
     self_scores = rel_entropies.diagonal()
 
     indices = [sorted(m).index(s) for s, m
                in zip(self_scores, rel_entropies)]
 
-    index_counts = [0] * len(net.class_names)
-    for index in indices:
-        index_counts[index] += 1
+    return dict(zip(class_names, indices))
 
-    cum_counts = []
-    total = 0
-    for n in index_counts:
-        total += n
-        cum_counts.append(total)
 
-    n = len(cum_counts)
-    centre = n / 2
-    radius = int(n * hedge)
-    cat1_top = centre - radius
-    cat1_bottom = centre + radius
-    step = 0.95 / (n - 2 * radius)
-    score_map = []
-    for x in range(n):
-        if x < cat1_top:
-            s = 0.99 - step * x
-        elif x < cat1_bottom:
-            s = 0.5
-        else:
-            s = 0.49 - step * (x - cat1_bottom)
-        score_map.append(s)
+def write_pan_results(net, filename, ignore_start, test_texts,
+                      hedge=0.0, raw=False):
+    index_results = get_indices(net, ignore_start, test_texts)
+    results = scale_results(index_results)
+    if not raw:
+        results = balance_results(results, cat1_radius=hedge)
 
-    if filename == '-':
-        f = sys.stdout
-    else:
-        f = open(filename, 'w')
-    for name, index in zip(net.class_names, indices):
-        if raw:
-            score = 1.0 - float(index) / net.n_classes
-        else:
-            score = score_map[index]
-        print >> f, "%s %.3f" % (name, score)
-    if f is not sys.stdout:
-        f.close()
+    write_answers(filename, results)
 
 
 def no_answer(*args):
