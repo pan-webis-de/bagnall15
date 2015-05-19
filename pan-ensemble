@@ -95,7 +95,7 @@ def main():
         write_answers(raw_answers % 'ensemble', results)
 
     cat1_settings = CAT1_SETTINGS[lang]
-    balanced_results = balance_results(results)
+    balanced_results = balance_results(results, *cat1_settings)
 
     fn = os.path.join(args.output_dir, "answers.txt")
     write_answers(fn, balanced_results)
