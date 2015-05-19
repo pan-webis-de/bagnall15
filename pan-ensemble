@@ -4,7 +4,7 @@ import os
 import sys
 import subprocess
 from language import guess_directory_lang
-from scoring import balance_results
+from pan import write_answers, balance_results
 import time
 import random
 
@@ -18,13 +18,6 @@ CAT1_SETTINGS = {
     'EN' : (None, 0.0),
     'SP' : (None, 0.03),
 }
-
-def write_answers(fn, results):
-    f = open(fn, 'w')
-    for k, v in sorted(results.items()):
-        print >>f, "%s %.3f" % (k, v)
-    f.close()
-
 
 def get_commands(lang, input_dir):
     commands = []
