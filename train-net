@@ -397,7 +397,8 @@ def main():
     parser.add_argument('--pan-answers',
                         help="write answers here in the style expected by PAN")
     parser.add_argument('--raw-answers',
-                        help="write answers here not adjusted for c@1 (- for stdout)")
+                        help=("write answers here not adjusted for c@1 "
+                              "(- for stdout)"))
     parser.add_argument('--raw-answers-trace',
                         help=("write raw answers after every epoch "
                               "(put %%d in name)"))
@@ -482,8 +483,8 @@ def main():
                            trace=trace)
 
         if args.pan_answers:
-            write_pan_results(net, args.pan_answers, args.ignore_start, test_texts,
-                              args.pan_hedge)
+            write_pan_results(net, args.pan_answers, args.ignore_start,
+                              test_texts, args.pan_hedge)
         if args.raw_answers:
             write_pan_results(net, args.raw_answers, args.ignore_start,
                               test_texts, args.pan_hedge, raw=True)
