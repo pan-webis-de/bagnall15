@@ -1,1 +1,1 @@
---control-corpus corpus/control/GR -M gr --batch-size=40 -d70
+--control-corpus corpus/control/GR -M gr

@@ -10,7 +10,9 @@ import random
 
 HERE = os.path.dirname(__file__)
 
-CMD = './train-net --ignore-start=10 --raw-answers=-'.split()
+CMD = ('./train-net --ignore-start=10 --raw-answers=-  --batch-size=40 '
+       ' -d70 --try-swapping-texts -n pan  --learning-method=4 '
+       '--pan-hedge=0.0 ').split()
 
 CAT1_SETTINGS = {
     'DU' : (None, 0.0),
