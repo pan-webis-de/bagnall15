@@ -292,11 +292,12 @@ def search(answers, truth, verbose=False):
             pass
 
     best_candidate, roc_trail, auc = search_for_centre(answers, truth)
-    indicators = {'centre': best_candidate}
+    indicators = {'best': best_candidate}
     median_answers = balance_results(answers)
     median_candidate = evaluate_fixed_cat1(median_answers, truth, 0.5, 0)[0]
     #print median_candidate
     indicators['median'] = median_candidate
+    indicators['centre'] = evaluate_fixed_cat1(answers, truth, 0.5, 0)[0]
     centre = best_candidate[3]
     print_c(best_candidate)
 
