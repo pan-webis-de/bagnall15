@@ -16,9 +16,9 @@ CMD = ('./train-net --ignore-start=10 --raw-answers=-  --batch-size=40 '
 
 CAT1_SETTINGS = {
     'DU' : (None, 0.0),
-    'GR' : (None, 0.0),
-    'EN' : (None, 0.0),
-    'SP' : (None, 0.03),
+    'GR' : (None, 0.03),
+    'EN' : (None, 0.03),
+    'SP' : (None, 0.04),
 }
 
 def get_commands(lang, input_dir):
