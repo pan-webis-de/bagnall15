@@ -16,9 +16,6 @@
 #0130a0e-22 21 +0.005
 -l1.4e-1 -L-3 --leakage-decay=0.7 -H119 -e22 --presynaptic-noise=0.1
 
-#77b6626-19
--l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -H119 -e19 --presynaptic-noise=0.5
-
 #64231db-18
 -l2e-1 -L-3 --leakage-decay=0.7 --concat-texts -H119 -e18 --presynaptic-noise=0.3 --reverse --no-control-corpus
 
