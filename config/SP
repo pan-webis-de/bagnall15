@@ -1,9 +1,6 @@
 #c3a5a6e-24
 -l1.4e-1 -L-2 --leakage-decay=0.7 -H139 -e24 --presynaptic-noise=0.1 --init-method=0
 
-#30f8e84-16
--l1.4e-1 -L-2 --leakage-decay=0.75 --swap-corpora -H99 -e16 --presynaptic-noise=0.2
-
 #92d8d39-19
 -l1.4e-1 -L-4 --leakage-decay=0.707 --reverse -H79 -e19 --presynaptic-noise=0.0
 
