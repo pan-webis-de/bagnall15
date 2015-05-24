@@ -4,20 +4,20 @@
 #0.414 c3a5a6e-16
 -l1.4e-1 -L-2 --leakage-decay=0.7 -H119 -e16 --presynaptic-noise=0.1 --concat-texts
 
-#0.418 5509976-12
--l1.4e-1 -L-0 --leakage-decay=0.707 -H119 -e12 --presynaptic-noise=0.3 --concat-texts
-
-#0.414 39c6100-6
--l2e-1 -L-5 --leakage-decay=0.67 --balanced-training --reverse -H99 -e6 --presynaptic-noise=0.2 --concat-texts
+#0.465 fb69860-28
+-l1.4e-1 -L-10 --leakage-decay=0.707 -H139 -e28 --presynaptic-noise=0.3 --concat-texts --init-method=0
 
 #0.428 92fec66-13
 -l1.4e-1 -L-2 --leakage-decay=0.75 --swap-corpora --reverse -H99 -e13 --presynaptic-noise=0.2 --concat-texts
 
+#0.418 5509976-12
+-l1.4e-1 -L-0 --leakage-decay=0.707 -H119 -e12 --presynaptic-noise=0.3 --concat-texts
+
 #0.457 bed9976-7
 -l2e-1 -L-2 --leakage-decay=0.7 --concat-texts -H119 -e7 --presynaptic-noise=0.3 --no-control-corpus
 
-#0.456 76beb3c-7
--l2e-1 -L-4 --leakage-decay=0.7 --concat-texts -H119 -e7 --presynaptic-noise=0.2 --no-control-corpus
+#0.414 39c6100-6
+-l2e-1 -L-5 --leakage-decay=0.67 --balanced-training --reverse -H99 -e6 --presynaptic-noise=0.2 --concat-texts
 
 #0.469 bd5cee9-16
 -l2e-1 -L-1 --leakage-decay=0.8 --concat-texts -H139 -e16 --presynaptic-noise=0.3
@@ -30,9 +30,6 @@
 #0.431 64231db-5
 -l2e-1 -L-3 --leakage-decay=0.7 --concat-texts -H139 -e5 --presynaptic-noise=0.3 --reverse
 
-
-#0.465 fb69860-28
--l1.4e-1 -L-10 --leakage-decay=0.707 -H139 -e28 --presynaptic-noise=0.3 --concat-texts --init-method=0
 
 #0.479 0130a0e-4, 10, 11
 -l1.4e-1 -L-3 --leakage-decay=0.7 -H139 -e4 --presynaptic-noise=0.3 --concat-texts
