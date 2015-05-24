@@ -82,7 +82,8 @@ def main():
     print >> sys.stderr, "using %s config" % lang
 
     commands = get_commands(lang, args.input_dir)
-    random.shuffle(commands)
+    if args.randomise:
+        random.shuffle(commands)
 
     if args.write_raw_answers:
         raw_answers = os.path.join(args.output_dir, "raw-answers-%s.txt")
