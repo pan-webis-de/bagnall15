@@ -57,22 +57,22 @@ def load_texts(srcdir, remap,
     return texts
 
 
-def concat_corpus(srcdir, remap, exclude_test=False):
+def load_corpus_map(srcdir, remap, exclude_test=False):
     accept = training_fn_search if exclude_test else always
-    texts = load_texts(srcdir, remap, file_accept=accept)
-    all_texts = []
-    for v in texts.values():
-        all_texts.extend(v)
-    return '\n'.join(all_texts)
+    return load_texts(srcdir, remap, file_accept=accept)
 
 
 def load_corpus(srcdir, remap, exclude_test=False):
-    accept = training_fn_search if exclude_test else always
-    texts = load_texts(srcdir, remap, file_accept=accept)
+    texts = load_corpus_map(srcdir, remap, exclude_test)
     all_texts = []
     for v in texts.values():
         all_texts.extend(v)
     return all_texts
+
+
+def concat_corpus(srcdir, remap, exclude_test=False):
+    all_texts = load_corpus(srcdir, remap, exclude_test)
+    return '\n'.join(all_texts)
 
 
 def count_chars(text, decompose=False):

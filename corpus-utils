@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import os
 import argparse
 import re
 import language
@@ -171,6 +172,10 @@ def main():
     parser.add_argument('-M', '--language-mapping',
                         help="use this character mapping")
 
+    parser.add_argument('--write-remapped-text', metavar='DIR',
+                        help=("write remapped text here"))
+
+
     args = parser.parse_args()
 
     remap = mappings.get_charmap(args.language_mapping)
@@ -197,5 +202,14 @@ def main():
 
     if args.count_words:
         count_words(text, ignore_case=args.ignore_case)
+
+    if args.write_remapped_text:
+        texts = language.load_corpus_map(args.corpus, remap, args.exclude_test)
+        for k, v in texts.items():
+            for i, text in enumerate(v):
+                fn = os.path.join(args.write_remapped_text, "%s-%s" % (k, i))
+                f = open(fn, 'w')
+                f.write(text)
+                f.close()
 
 main()
