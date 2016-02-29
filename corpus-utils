@@ -93,7 +93,7 @@ def print_char_map(text, threshold=1e-5, decompose=False,
 
     remapped_chars = set()
     print 'charmap = {'
-    for c, n in counts:
+    for c, n in sorted(counts):
         m, note = specials.get(c, (c, ''))
         category = unicodedata.category(c)
         if category[0] != 'L':
