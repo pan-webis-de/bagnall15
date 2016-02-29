@@ -175,6 +175,8 @@ def main():
     parser.add_argument('--write-remapped-text', metavar='DIR',
                         help=("write remapped text here"))
 
+    parser.add_argument('--source-file',
+                        help=("read text from here, not corpus"))
 
     args = parser.parse_args()
 
@@ -184,7 +186,12 @@ def main():
         texts = language.load_corpus(args.corpus, remap, args.exclude_test)
         count_words_doc_freq(texts, ignore_case=args.ignore_case)
 
-    text = language.concat_corpus(args.corpus, remap, args.exclude_test)
+    if args.source_file:
+        f = open(args.source_file)
+        text = f.read()
+        f.close()
+    else:
+        text = language.concat_corpus(args.corpus, remap, args.exclude_test)
 
     if args.count_chars:
         count_chars(text, decompose=args.decompose_unicode,
