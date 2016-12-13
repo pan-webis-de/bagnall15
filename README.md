@@ -14,5 +14,11 @@ and the python-dev package. `make charmodel.so` is supposed to work.
 
 [recur]: https://github.com/douglasbagnall/recur
 
+There is a [paper] about it on the pan site
+and an expanded/modified/reviewed version at
+<https://arxiv.org/abs/1506.04891>.
+
+[paper]: http://www.uni-weimar.de/medien/webis/events/pan-15/pan15-papers-final/pan15-authorship-verification/bagnall15-notebook.pdf
+
 This software is copyright Douglas Bagnall and is licensed under the
 GPL, version 2 or greater.
